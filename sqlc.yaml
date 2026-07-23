@@ -1,0 +1,12 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: 
+      - "store/queries/user.sql"
+      - "store/queries/verification.sql"
+      - "store/queries/refresh.sql"
+    schema: "store/schemas/schema.sql"
+    gen:
+      go:
+        package: "gen"
+        out: "store/gen"
