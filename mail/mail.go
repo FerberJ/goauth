@@ -1,4 +1,4 @@
-package mailClient
+package mail
 
 import (
 	"fmt"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"go/playground/config"
-	mailClient "go/playground/mail_client"
+	"go/playground/mail"
 	"go/playground/store"
 	"go/playground/token"
 	"net/http"
@@ -21,7 +21,7 @@ const (
 type AppContext struct {
 	DB     store.DB
 	Config config.Config
-	SMTP   mailClient.MailClient
+	SMTP   mail.MailClient
 }
 
 /*
@@ -75,7 +75,7 @@ func GetSMTP(ctx context.Context) (smtp.MailClient, error) {
 }
 */
 
-func WithAppContext(db store.DB, conf config.Config, mailClient mailClient.MailClient) func(http.Handler) http.Handler {
+func WithAppContext(db store.DB, conf config.Config, mailClient mail.MailClient) func(http.Handler) http.Handler {
 	app := AppContext{
 		DB:     db,
 		Config: conf,

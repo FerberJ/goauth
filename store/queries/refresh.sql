@@ -25,3 +25,7 @@ UPDATE auth_refresh
 SET
     revoked = TRUE
 WHERE id = ?;
+
+-- name: DeleteRefresh :exec
+DELETE FROM auth_refresh
+WHERE id = ?;

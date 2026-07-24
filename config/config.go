@@ -66,7 +66,7 @@ func GetConf(db *sql.DB) (Config, error) {
 	if err != nil {
 		return conf, fmt.Errorf("verification tokenTTL must be a int: %w", err)
 	}
-	endpoint := os.Getenv("AUTH_VERIFICATION_ENPOINT")
+	endpoint := os.Getenv("AUTH_VERIFICATION_ENDPOINT")
 
 	// Refresh
 	tokenTTLRefreshStr := os.Getenv("AUTH_REFRESH_TOKEN_TTL")

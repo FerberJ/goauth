@@ -1,17 +1,16 @@
 package main
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
-	"go/playground/auth"
+	"go/playground/api"
 	"go/playground/config"
-	"go/playground/models"
+	"go/playground/mail"
+	"go/playground/store"
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -26,26 +25,24 @@ func main() {
 	if err := conn.Ping(); err != nil {
 		log.Fatal(err)
 	}
-	a, err := auth.Init(conf)
 
-	ctx := context.Background()
-	s := models.SignupRequest{
-		Name:     "efrrruru",
-		Email:    "abc@derurr.com",
-		Password: "superPW",
-	}
-	token, err := a.Signup(ctx, s)
-	fmt.Println(token)
+	st, _ := store.Init(conn)
 
-	err = a.VerifyEmail(ctx, token)
-
-	fmt.Println("what happend?")
+	mailClient, _ := mail.Init(conf.SMTP)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Mount("/auth", a.GetRoutes())
+	//r.Post("/signup", handler.HandleSignup)
+	rout := api.GetRoutes(conf, st, mailClient)
+
+	r.Mount("/auth", rout)
+
+	chi.Walk(r, func(method, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		log.Println("AUTH ROUTE:", method, route)
+		return nil
+	})
 
 	addr := ":1122"
 	log.Printf("listening on %s", addr)

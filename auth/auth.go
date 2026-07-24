@@ -1,5 +1,7 @@
 package auth
 
+/*
+
 import (
 	"context"
 	"encoding/json"
@@ -11,9 +13,10 @@ import (
 	"go/playground/config"
 	"go/playground/encryption"
 	"go/playground/handler"
+	"go/playground/mail"
 	"go/playground/middleware"
 	"go/playground/models"
-	"go/playground/smtp"
+
 	"go/playground/store"
 	"go/playground/store/gen"
 	"go/playground/token"
@@ -24,7 +27,7 @@ import (
 type Auth struct {
 	config config.Config
 	store  store.DB
-	smtp   smtp.MailClient
+	smtp   mail.MailClient
 }
 
 // Entry point for users of this Library.
@@ -36,7 +39,7 @@ func Init(conf config.Config) (Auth, error) {
 	if err != nil {
 		return auth, fmt.Errorf("error when initalising DB: %w", err)
 	}
-	mailClient, err := smtp.Init(conf.SMTP)
+	mailClient, err := mail.Init(conf.SMTP)
 	if err != nil {
 		return auth, fmt.Errorf("error when initalising mail client: %w", err)
 	}
@@ -123,7 +126,7 @@ func (auth Auth) SendVerificationToken(ctx context.Context, token string, userMa
 	if err != nil {
 		return err
 	}
-	return auth.smtp.SendMail(auth.config.SMTP.Client, userMail, path, "verification token", smtp.Text)
+	return auth.smtp.SendMail(auth.config.SMTP.Client, userMail, path, "verification token", mail.Text)
 }
 
 func (auth Auth) VerifyEmail(ctx context.Context, token string) error {
@@ -411,12 +414,10 @@ func (auth Auth) verify(jwtToken string) (*token.Claims, error) {
 
 func (auth Auth) GetRoutes() chi.Router {
 	r := chi.NewRouter().
-		With(middleware.WithConfig(auth.config)).
-		With(middleware.WithDB(auth.store)).
-		With(middleware.WithSMTP(auth.smtp))
+		With(middleware.WithAppContext(auth.store, auth.config, auth.smtp))
 
 	r.Post("/signup", auth.handleSignup)
-	r.Post("/verify/{token}", auth.handleVerifyToken)
+	r.Post("/verify/{token}", auth.HandleVerifyToken)
 	r.Post("/login", auth.handleLogin)
 
 	m := r.With(middleware.Authorization)
@@ -485,7 +486,7 @@ func (auth Auth) handleLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (auth Auth) handleVerifyToken(w http.ResponseWriter, r *http.Request) {
+func (auth Auth) HandleVerifyToken(w http.ResponseWriter, r *http.Request) {
 	verifyToken := chi.URLParam(r, "token")
 	ctx := context.Background()
 	err := auth.VerifyEmail(ctx, verifyToken)
@@ -513,13 +514,13 @@ func (auth Auth) handleSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	verifyURL, err := url.JoinPath(auth.config.Verification.Endpoint, "verify", verifyToken)
-	auth.smtp.SendMail(auth.config.SMTP.Username, signupRequest.Email, verifyURL, "verify", smtp.Text)
+	auth.smtp.SendMail(auth.config.SMTP.Username, signupRequest.Email, verifyURL, "verify", mail.Text)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 }
 
-/*
+
 func CreateUser(password, user string) (string, error) {
 	encrypt, err := encryption.HashPassword(password)
 	if err != nil {
