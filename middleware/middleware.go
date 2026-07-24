@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go/playground/config"
 	"go/playground/mail"
 	"go/playground/store"
@@ -124,7 +125,7 @@ func Authorization(next http.Handler) http.Handler {
 func GetClaim(ctx context.Context) (*token.Claims, error) {
 	claim, ok := ctx.Value(authCtxKey).(*token.Claims)
 	if !ok {
-		//
+		return nil, fmt.Errorf("could not recieve claim")
 	}
 
 	return claim, nil

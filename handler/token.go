@@ -1,6 +1,7 @@
 package handler
 
 import (
+	errormsg "go/playground/error_msg"
 	"go/playground/middleware"
 	"go/playground/service"
 	"net/http"
@@ -12,7 +13,8 @@ func HandleVerifyToken(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	app, err := middleware.GetAppContext(r.Context())
 	if err != nil {
-		//
+		errormsg.AppContextErr(w, err)
+		return
 	}
 
 	db := app.DB
@@ -22,7 +24,7 @@ func HandleVerifyToken(w http.ResponseWriter, r *http.Request) {
 	v := service.NewVerification(db, cfg)
 	err = v.VerifyEmail(ctx, verifyToken)
 	if err != nil {
-		http.Error(w, "could not verify user", http.StatusBadRequest)
+		errormsg.VerifyErr(w, err)
 		return
 	}
 
