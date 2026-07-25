@@ -22,7 +22,7 @@ func HandleVerifyToken(w http.ResponseWriter, r *http.Request) {
 
 	verifyToken := chi.URLParam(r, "token")
 	v := service.NewVerification(db, cfg)
-	err = v.VerifyEmail(ctx, verifyToken)
+	err = v.Verify(ctx, verifyToken)
 	if err != nil {
 		errormsg.VerifyErr(w, err)
 		return

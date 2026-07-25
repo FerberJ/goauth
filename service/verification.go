@@ -107,7 +107,7 @@ func (v *Verification) Revoke(ctx context.Context, id string) error {
 	return nil
 }
 
-func (v *Verification) VerifyEmail(ctx context.Context, token string) error {
+func (v *Verification) Verify(ctx context.Context, token string) error {
 	hashToken := encryption.HashToken(token)
 	ver, err := v.Get(ctx, hashToken)
 	if err != nil {

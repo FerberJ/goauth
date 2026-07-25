@@ -76,6 +76,7 @@ const (
 	User Datatable = iota
 	Verification
 	Refresh
+	Password
 )
 
 func (db DB) CreateID(ctx context.Context, dt Datatable) (string, error) {
@@ -92,6 +93,8 @@ func (db DB) CreateID(ctx context.Context, dt Datatable) (string, error) {
 			exists, err = db.Queries.VerificationIDExists(ctx, id)
 		case Refresh:
 			exists, err = db.Queries.RefreshExists(ctx, id)
+		case Password:
+			exists, err = db.Queries.PasswordForgotExists(ctx, id)
 		default:
 			err = fmt.Errorf("creating a id for this table has not been implemented yet!")
 		}

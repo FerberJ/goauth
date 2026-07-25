@@ -21,6 +21,7 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient) chi.Router
 	r.Post("/logout", handler.HandleLogout)
 	r.Post("/refresh", handler.HandleRefresh)
 	r.Post("/forgot-password", handler.HandleForgotPassword)
+	r.Post("/change-password", handler.HandleResetPassword)
 
 	m := r.With(middleware.Authorization)
 

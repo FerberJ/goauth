@@ -23,3 +23,12 @@ CREATE TABLE auth_refresh (
     expires_at INTEGER NOT NULL,
     revoked BOOLEAN NOT NULL DEFAULT FALSE
 )
+
+CREATE TABLE auth_password_forgot (
+    id TEXT PRIMARY KEY,
+    token_id TEXT NOT NULL, -- hashed
+    user_id TEXT NOT NULL,
+    issued_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    revoked BOOLEAN NOT NULL DEFAULT FALSE
+)

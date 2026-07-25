@@ -161,7 +161,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := GetTokens(ctx, u.ID, app)
+	t, err := getTokens(ctx, u.ID, app)
 	if err != nil {
 		errormsg.GetTokenErr(w, err)
 		return
@@ -184,7 +184,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 	})
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
@@ -275,7 +275,7 @@ func HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := GetTokens(ctx, refresh.UserID, app)
+	t, err := getTokens(ctx, refresh.UserID, app)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
@@ -302,19 +302,130 @@ func HandleRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
-	/*
-		var resetRequest models.Reset
-		ctx := r.Context()
+	var resetRequest models.ResetRequest
+	ctx := r.Context()
 
-		err := json.NewDecoder(r.Body).Decode(&resetRequest)
-		if err != nil {
-			http.Error(w, "invalid request body", http.StatusBadRequest)
-			return
-		}
-	*/
+	err := json.NewDecoder(r.Body).Decode(&resetRequest)
+	if err != nil {
+		errormsg.DecodeErr(w, err)
+		return
+	}
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	cfg := app.Config
+	smtp := app.SMTP
+
+	u, err := db.Queries.GetFromMail(ctx, resetRequest.Email)
+
+	t, err := getPasswordToken(ctx, u.ID, app)
+
+	verifyURL, err := url.JoinPath(cfg.Password.Endpoint, "reset-password", t)
+	if err != nil {
+		errormsg.JoinPathErr(w, err)
+		return
+	}
+	err = smtp.SendMail(cfg.SMTP.Username, resetRequest.Email, verifyURL, "reset password", mail.HTML)
+	if err != nil {
+		errormsg.SendMailErr(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
-func GetTokens(ctx context.Context, userID string, app middleware.AppContext) (token.Tokens, error) {
+func HandleResetPassword(w http.ResponseWriter, r *http.Request) {
+	var resetPassword models.ResetPassword
+	ctx := r.Context()
+
+	err := json.NewDecoder(r.Body).Decode(&resetPassword)
+	if err != nil {
+		errormsg.DecodeErr(w, err)
+		return
+	}
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	cfg := app.Config
+
+	userID := ""
+	skipOldPassword := false
+
+	if resetPassword.Token != "" {
+		tokenHash := encryption.HashToken(resetPassword.Token)
+		pw, err := db.Queries.GetPasswordForgot(ctx, tokenHash)
+		if err != nil {
+			errormsg.GetEntryErr(w, err)
+			return
+		}
+
+		if pw.ExpiresAt < time.Now().Unix() {
+			errormsg.ExpireErr(w, fmt.Errorf("refresh token has expired"))
+			return
+		}
+
+		if pw.Revoked {
+			errormsg.RevokeErr(w, fmt.Errorf("refresh token has been revoked"))
+			return
+		}
+
+		userID = pw.UserID
+		skipOldPassword = true
+	} else if resetPassword.OldPassword != "" && resetPassword.Email != "" {
+		user, err := db.Queries.GetFromMail(ctx, resetPassword.Email)
+		if err != nil {
+			errormsg.GetEntryErr(w, err)
+			return
+		}
+
+		userID = user.ID
+		skipOldPassword = false
+	} else {
+		errormsg.RevokeErr(w, fmt.Errorf("either a reset password token has to be provided or the old password with email"))
+	}
+
+	u := service.NewUser(db, cfg)
+	err = u.UpdatePassword(ctx, models.UpdatePasswordRequest{
+		NewPassword: resetPassword.Password,
+		OldPassword: resetPassword.OldPassword,
+	}, userID, skipOldPassword)
+	if err != nil {
+		errormsg.UpdatePasswordErr(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func getPasswordToken(ctx context.Context, userID string, app middleware.AppContext) (string, error) {
+	cfg := app.Config
+	db := app.DB
+
+	p := service.NewPassword(db, cfg)
+
+	return p.Create(ctx, userID)
+}
+
+func getVerification(ctx context.Context, userID string, app middleware.AppContext) (string, error) {
+	cfg := app.Config
+	db := app.DB
+
+	v := service.NewVerification(db, cfg)
+
+	return v.Create(ctx, userID)
+}
+
+func getTokens(ctx context.Context, userID string, app middleware.AppContext) (token.Tokens, error) {
 	cfg := app.Config
 	db := app.DB
 

@@ -120,18 +120,20 @@ func (u *User) Exists(ctx context.Context, id string) (bool, error) {
 	return exists, nil
 }
 
-func (u *User) UpdatePassword(ctx context.Context, passwords models.UpdatePasswordRequest, id string) error {
+func (u *User) UpdatePassword(ctx context.Context, passwords models.UpdatePasswordRequest, id string, skipOldPassword bool) error {
 	user, err := u.Get(ctx, id)
 	if err != nil {
 		return fmt.Errorf("could not find user: %w", err)
 	}
 
-	ok, err := encryption.CompareHash(user.Password, passwords.OldPassword)
-	if err != nil {
-		return fmt.Errorf("could not compare passwords: %w", err)
-	}
-	if !ok {
-		return fmt.Errorf("wrong password")
+	if !skipOldPassword {
+		ok, err := encryption.CompareHash(user.Password, passwords.OldPassword)
+		if err != nil {
+			return fmt.Errorf("could not compare passwords: %w", err)
+		}
+		if !ok {
+			return fmt.Errorf("wrong password")
+		}
 	}
 
 	passwordHash, err := encryption.HashPassword(passwords.NewPassword)

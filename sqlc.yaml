@@ -5,6 +5,7 @@ sql:
       - "store/queries/user.sql"
       - "store/queries/verification.sql"
       - "store/queries/refresh.sql"
+      - "store/queries/password.sql"
     schema: "store/schemas/schema.sql"
     gen:
       go:

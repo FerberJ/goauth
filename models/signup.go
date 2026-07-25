@@ -18,3 +18,7 @@ type UpdatePasswordRequest struct {
 	OldPassword string
 	NewPassword string
 }
+
+type UpdatePassword struct {
+	Password string
+}

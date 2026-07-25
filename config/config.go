@@ -16,14 +16,20 @@ type Config struct {
 	Secret       string
 	DB           *sql.DB
 	Verification Verification
+	Password     Password
 	Refresh      Refresh
 }
 
 type Refresh struct {
 	TokenTTL time.Duration
 }
-
 type Verification struct {
+	TokenBytes int
+	TokenTTL   time.Duration
+	Endpoint   string
+}
+
+type Password struct {
 	TokenBytes int
 	TokenTTL   time.Duration
 	Endpoint   string
@@ -68,11 +74,24 @@ func GetConf(db *sql.DB) (Config, error) {
 	}
 	endpoint := os.Getenv("AUTH_VERIFICATION_ENDPOINT")
 
+	// Password forgot token
+	pwTokenBytesStr := os.Getenv("AUTH_PASSWORD_TOKEN_BYTES")
+	pwTokenBytes, err := strconv.Atoi(pwTokenBytesStr)
+	if err != nil {
+		return conf, fmt.Errorf("password tokenBytes must be a int: %w", err)
+	}
+	pwTokenTTLStr := os.Getenv("AUTH_PASSWORD_TOKEN_TTL")
+	pwTokenTTL, err := strconv.Atoi(pwTokenTTLStr)
+	if err != nil {
+		return conf, fmt.Errorf("verification password tokenTTL must be a int: %w", err)
+	}
+	pwEndpoint := os.Getenv("AUTH_PASSWORD_ENDPOINT")
+
 	// Refresh
-	tokenTTLRefreshStr := os.Getenv("AUTH_REFRESH_TOKEN_TTL")
+	tokenTTLRefreshStr := os.Getenv("AUTH_PASSWORD_TOKEN_TTL")
 	tokenTTLRefresh, err := strconv.Atoi(tokenTTLRefreshStr)
 	if err != nil {
-		return conf, fmt.Errorf("refresh tokenTTL must be a int: %w", err)
+		return conf, fmt.Errorf("refresh password tokenTTL must be a int: %w", err)
 	}
 
 	conf = Config{
@@ -83,6 +102,11 @@ func GetConf(db *sql.DB) (Config, error) {
 			Username: username,
 			Password: password,
 			Port:     port,
+		},
+		Password: Password{
+			TokenBytes: pwTokenBytes,
+			TokenTTL:   time.Duration(pwTokenTTL),
+			Endpoint:   pwEndpoint,
 		},
 		Verification: Verification{
 			TokenBytes: tokenBytes,

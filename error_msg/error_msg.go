@@ -105,3 +105,18 @@ func RevokeErr(w http.ResponseWriter, err error) {
 func VerifyErr(w http.ResponseWriter, err error) {
 	responseWriter(w, "015", http.StatusBadRequest, err)
 }
+
+// 016
+func WrongUserErr(w http.ResponseWriter, err error) {
+	responseWriter(w, "016", http.StatusBadRequest, err)
+}
+
+// 017
+func UpdatePasswordErr(w http.ResponseWriter, err error) {
+	responseWriter(w, "017", http.StatusBadRequest, err)
+}
+
+// 018
+func RequestErr(w http.ResponseWriter, err error) {
+	responseWriter(w, "018", http.StatusBadRequest, err)
+}
