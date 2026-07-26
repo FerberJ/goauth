@@ -9,12 +9,15 @@ import (
 	"go/playground/store"
 	"go/playground/token"
 	"net/http"
+
+	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 const (
 	dbCtxKey     = "dbCtxKey"
 	configCtxKey = "configCtxKey"
 	smtpCtxKey   = "smtpCtxKey"
+	claimCtxKey  = "claimCtxKey"
 	authCtxKey   = "authCtxKey"
 	appCtxKey    = "appCtxKey"
 )
@@ -23,6 +26,7 @@ type AppContext struct {
 	DB     store.DB
 	Config config.Config
 	SMTP   mail.MailClient
+	Auth   *webauthn.WebAuthn
 }
 
 /*
@@ -76,11 +80,12 @@ func GetSMTP(ctx context.Context) (smtp.MailClient, error) {
 }
 */
 
-func WithAppContext(db store.DB, conf config.Config, mailClient mail.MailClient) func(http.Handler) http.Handler {
+func WithAppContext(db store.DB, conf config.Config, mailClient mail.MailClient, webauth *webauthn.WebAuthn) func(http.Handler) http.Handler {
 	app := AppContext{
 		DB:     db,
 		Config: conf,
 		SMTP:   mailClient,
+		Auth:   webauth,
 	}
 
 	return func(next http.Handler) http.Handler {
@@ -118,12 +123,12 @@ func Authorization(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), authCtxKey, c)
+		ctx := context.WithValue(r.Context(), claimCtxKey, c)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 func GetClaim(ctx context.Context) (*token.Claims, error) {
-	claim, ok := ctx.Value(authCtxKey).(*token.Claims)
+	claim, ok := ctx.Value(claimCtxKey).(*token.Claims)
 	if !ok {
 		return nil, fmt.Errorf("could not recieve claim")
 	}

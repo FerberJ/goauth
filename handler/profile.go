@@ -71,9 +71,7 @@ func HandleChangeName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var renameRequest models.RenameRequest
-
-	err = json.NewDecoder(r.Body).Decode(&renameRequest)
+	renameRequest, err := decodeBody[models.RenameRequest](r)
 	if err != nil {
 		errormsg.DecodeErr(w, err)
 		return
@@ -86,10 +84,8 @@ func HandleChangeName(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleSignup(w http.ResponseWriter, r *http.Request) {
-	var signupRequest models.SignupRequest
 	ctx := r.Context()
-
-	err := json.NewDecoder(r.Body).Decode(&signupRequest)
+	signupRequest, err := decodeBody[models.SignupRequest](r)
 	if err != nil {
 		errormsg.DecodeErr(w, err)
 		return
@@ -128,10 +124,8 @@ func HandleSignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
-	var loginRequest models.LoginRequest
 	ctx := r.Context()
-
-	err := json.NewDecoder(r.Body).Decode(&loginRequest)
+	loginRequest, err := decodeBody[models.LoginRequest](r)
 	if err != nil {
 		errormsg.DecodeErr(w, err)
 		return
@@ -302,10 +296,8 @@ func HandleRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
-	var resetRequest models.ResetRequest
 	ctx := r.Context()
-
-	err := json.NewDecoder(r.Body).Decode(&resetRequest)
+	resetRequest, err := decodeBody[models.ResetRequest](r)
 	if err != nil {
 		errormsg.DecodeErr(w, err)
 		return
@@ -340,10 +332,8 @@ func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleResetPassword(w http.ResponseWriter, r *http.Request) {
-	var resetPassword models.ResetPassword
 	ctx := r.Context()
-
-	err := json.NewDecoder(r.Body).Decode(&resetPassword)
+	resetPassword, err := decodeBody[models.ResetPassword](r)
 	if err != nil {
 		errormsg.DecodeErr(w, err)
 		return
