@@ -426,6 +426,43 @@ func HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	token, err := middleware.GetClaim(ctx)
+	if err != nil {
+		errormsg.ClaimErr(w, err)
+		return
+	}
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	wa := app.Auth
+	cfg := app.Config
+
+	userService := service.NewUser(db, cfg)
+
+	u, err := userService.Get(ctx, token.UserID)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+
+	credentials, err := u.BeginRegistration(db, wa)
+	if err != nil {
+		errormsg.BeginRegistrationErr(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(credentials)
+}
+
 func HandleBeginSignup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	email := r.URL.Query().Get("email")
@@ -469,6 +506,46 @@ func HandleBeginSignup(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(credentials)
+}
+
+func HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	token, err := middleware.GetClaim(ctx)
+	if err != nil {
+		errormsg.ClaimErr(w, err)
+		return
+	}
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	wa := app.Auth
+	cfg := app.Config
+
+	userService := service.NewUser(db, cfg)
+
+	u, err := userService.Get(ctx, token.UserID)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+
+	err = u.FinishRegistration(db, wa, r)
+
+	data, err := json.Marshal(u.Credentials)
+	//db.Queries.up
+	err = db.Queries.UserUpdateSignupCredentials(ctx, gen.UserUpdateSignupCredentialsParams{
+		Credentials: json.RawMessage(data),
+		ID:          u.ID,
+		Mail:        u.Mail,
+	})
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func HandleFinishSignup(w http.ResponseWriter, r *http.Request) {

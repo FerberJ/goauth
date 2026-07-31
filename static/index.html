@@ -76,8 +76,8 @@
 
       try {
         log('--- register: fetching options ---');
-        const beginResp = await fetch(`/auth/signup/fido/begin?email=${encodeURIComponent(username)}`, {
-          method: 'POST',
+        const beginResp = await fetch(`/auth/profile/fido/begin?email=${encodeURIComponent(username)}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
         });
         if (!beginResp.ok) return log('begin failed: ' + await beginResp.text());
@@ -108,8 +108,8 @@
           clientExtensionResults: cred.getClientExtensionResults(),
         };
 
-        const finishResp = await fetch(`/auth/signup/fido/finish?email=${encodeURIComponent(username)}`, {
-          method: 'POST',
+        const finishResp = await fetch(`/auth/profile/fido/finish?email=${encodeURIComponent(username)}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(credentialJSON),
         });

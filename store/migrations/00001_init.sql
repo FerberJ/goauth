@@ -6,7 +6,6 @@ CREATE TABLE auth_users (
     mail TEXT NOT NULL UNIQUE,
     verified BOOLEAN NOT NULL DEFAULT FALSE,
     credentials TEXT NOT NULL DEFAULT '[]'
-    ttl TEXT,
 );
 
 CREATE TABLE auth_verification (

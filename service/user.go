@@ -78,12 +78,9 @@ func (u *User) GetFromMail(ctx context.Context, mail string) (models.User, error
 		return user, fmt.Errorf("could not find user from email %s: %w", mail, err)
 	}
 
-	user = models.User{
-		ID:       authUser.ID,
-		Name:     store.NullStringToString(authUser.Name),
-		Mail:     authUser.Mail,
-		Password: store.NullStringToString(authUser.PasswordHash),
-		// Verified: authUser.Verified,
+	user, err = models.GetUser(authUser)
+	if err != nil {
+		return user, fmt.Errorf("cannot format authUser to user")
 	}
 
 	return user, nil
@@ -96,12 +93,9 @@ func (u *User) Get(ctx context.Context, id string) (models.User, error) {
 		return user, fmt.Errorf("could not find user from ID %s: %w", id, err)
 	}
 
-	user = models.User{
-		ID:       authUser.ID,
-		Name:     store.NullStringToString(authUser.Name),
-		Mail:     authUser.Mail,
-		Password: store.NullStringToString(authUser.PasswordHash),
-		// Verified: authUser.Verified,
+	user, err = models.GetUser(authUser)
+	if err != nil {
+		return user, fmt.Errorf("cannot format authUser to user")
 	}
 
 	return user, nil
