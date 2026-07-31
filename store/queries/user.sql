@@ -44,5 +44,6 @@ WHERE id = ?;
 -- name: UserUpdateCredentials :exec
 UPDATE auth_users
 SET
-  credentials = ?
+  credentials = ?,
+  mail = ?
 WHERE id = ?;

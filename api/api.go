@@ -17,17 +17,19 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 	r.Use(middleware.WithAppContext(db, config, mc, wa))
 
 	r.Post("/signup", handler.HandleSignup)
+	r.Post("/signup/fido/begin", handler.HandleBeginSignup)
+	r.Post("/signup/fido/finish", handler.HandleFinishSignup)
+
 	r.Get("/verify/{token}", handler.HandleVerifyToken)
+
 	r.Post("/login", handler.HandleLogin)
+	r.Get("/login/fido/begin", handler.HandleBeginLogin)
+	r.Post("/login/fido/finish", handler.HandleFinishLogin)
+
 	r.Post("/logout", handler.HandleLogout)
 	r.Post("/refresh", handler.HandleRefresh)
 	r.Post("/forgot-password", handler.HandleForgotPassword)
 	r.Post("/change-password", handler.HandleResetPassword)
-
-	r.Get("/fido/register/begin", handler.HandleBeginRegister)
-	r.Post("/fido/register/finish", handler.HandleFinishRegister)
-	r.Get("/fido/login/begin", handler.HandleBeginLogin)
-	r.Post("/fido/login/finish", handler.HandleFinishLogin)
 
 	m := r.With(middleware.Authorization)
 

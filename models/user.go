@@ -47,11 +47,15 @@ func GetUser(u gen.AuthUser) (User, error) {
 }
 
 func (u *User) BeginRegistration(db store.DB, webAuthn *webauthn.WebAuthn) (*protocol.CredentialCreation, error) {
-	options, sessionData, err := webAuthn.BeginRegistration(u)
+	options, session, err := webAuthn.BeginRegistration(u)
 	if err != nil {
 		return nil, err
 	}
 
+	sessionData := store.SessionData{
+		SessionData: session,
+		UserID:      u.ID,
+	}
 	err = db.Session.Set(u.Mail, sessionData)
 	if err != nil {
 		return nil, err
@@ -65,11 +69,12 @@ func (u *User) FinishRegistration(db store.DB, webAuthn *webauthn.WebAuthn, r *h
 	if err != nil {
 		return err
 	}
-	if sessionData == nil {
+	if sessionData.SessionData == nil {
 		return fmt.Errorf("no registration session for user")
 	}
+	u.ID = sessionData.UserID
 
-	credential, err := webAuthn.FinishRegistration(u, *sessionData, r)
+	credential, err := webAuthn.FinishRegistration(u, *sessionData.SessionData, r)
 	if err != nil {
 		return err
 	}
@@ -80,11 +85,15 @@ func (u *User) FinishRegistration(db store.DB, webAuthn *webauthn.WebAuthn, r *h
 }
 
 func (u *User) BeginLogin(db store.DB, webAuthn *webauthn.WebAuthn) (*protocol.CredentialAssertion, error) {
-	options, sessionData, err := webAuthn.BeginLogin(u)
+	options, session, err := webAuthn.BeginLogin(u)
 	if err != nil {
 		return nil, err
 	}
 
+	sessionData := store.SessionData{
+		SessionData: session,
+		UserID:      u.ID,
+	}
 	err = db.Session.Set(u.ID, sessionData)
 	if err != nil {
 		return nil, err
@@ -98,11 +107,11 @@ func (u *User) FinishLogin(db store.DB, webAuthn *webauthn.WebAuthn, r *http.Req
 	if err != nil {
 		return err
 	}
-	if sessionData == nil {
+	if sessionData.SessionData == nil {
 		return fmt.Errorf("no login session for user")
 	}
 
-	_, err = webAuthn.FinishLogin(u, *sessionData, r)
+	_, err = webAuthn.FinishLogin(u, *sessionData.SessionData, r)
 	if err != nil {
 		return err
 	}

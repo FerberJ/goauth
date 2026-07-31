@@ -19,6 +19,8 @@ import (
 	"go/playground/token"
 	"net/http"
 	"net/url"
+
+	"github.com/google/uuid"
 )
 
 func HandleProfile(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +106,7 @@ func HandleSignup(w http.ResponseWriter, r *http.Request) {
 	smtp := app.SMTP
 
 	u := service.NewUser(db, cfg)
-	token, err := u.Create(ctx, signupRequest, false)
+	token, _, err := u.Create(ctx, signupRequest, false)
 	if err != nil {
 		errormsg.CreateErr(w, err)
 		return
@@ -424,8 +426,7 @@ func HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+func HandleBeginSignup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	email := r.URL.Query().Get("email")
 
@@ -439,39 +440,25 @@ func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
 	wa := app.Auth
 	cfg := app.Config
 
-	u, err := db.Queries.GetFromMail(ctx, email)
-	if errors.Is(err, sql.ErrNoRows) {
-		userService := service.NewUser(db, cfg)
-		userService.Create(ctx, models.SignupRequest{
-			Name:     "",
-			Email:    email,
-			Password: "",
-		}, true)
-
-		user, err = userService.GetFromMail(ctx, email)
-		if err != nil {
-			errormsg.GetEntryErr(w, err)
-			return
-		}
-	} else if err != nil {
-		errormsg.GetEntryErr(w, err)
+	userService := service.NewUser(db, cfg)
+	_, err = userService.GetFromMail(ctx, email)
+	if !errors.Is(err, sql.ErrNoRows) {
+		errormsg.UserAlreadyExists(w, fmt.Errorf("user already exists"))
 		return
-	} else {
-		cookie, err := r.Cookie("authorization")
-		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-		_, err = token.VerifyToken(cookie.Value, cfg.Secret)
-		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-		user, err = models.GetUser(u)
-		if err != nil {
-			errormsg.GetEntryErr(w, err)
-			return
-		}
+	}
+	_, userID, err := userService.Create(ctx, models.SignupRequest{
+		Name:     "",
+		Email:    uuid.NewString(),
+		Password: "",
+	}, true)
+	if err != nil {
+		errormsg.CreateErr(w, err)
+		return
+	}
+
+	user := models.User{
+		ID:   userID,
+		Mail: email,
 	}
 
 	credentials, err := user.BeginRegistration(db, wa)
@@ -484,8 +471,7 @@ func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(credentials)
 }
 
-func HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+func HandleFinishSignup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	email := r.URL.Query().Get("email")
 
@@ -496,52 +482,22 @@ func HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db := app.DB
-	cfg := app.Config
 	wa := app.Auth
 
-	u, err := db.Queries.GetFromMail(ctx, email)
-	if errors.Is(err, sql.ErrNoRows) {
-		user = models.User{Mail: email}
-	} else if err != nil {
-		errormsg.GetEntryErr(w, err)
-		return
-	} else {
-		user, err = models.GetUser(u)
-		if err != nil {
-			errormsg.GetEntryErr(w, err)
-			return
-		}
-	}
-
+	user := models.User{Mail: email}
 	err = user.FinishRegistration(db, wa, r)
 
-	userService := service.NewUser(db, cfg)
-	if user.ID == "" {
-		_, err = userService.Create(ctx, models.SignupRequest{
-			Name:     "",
-			Email:    email,
-			Password: "",
-		}, true)
-		if err != nil {
-			errormsg.CreateErr(w, err)
-			return
-		}
-	}
-	dbUser, err := userService.GetFromMail(ctx, email)
-	if err != nil {
-		errormsg.GetEntryErr(w, err)
-		return
-	}
-
 	data, err := json.Marshal(user.Credentials)
+	//db.Queries.up
 	err = db.Queries.UserUpdateCredentials(ctx, gen.UserUpdateCredentialsParams{
 		Credentials: json.RawMessage(data),
-		ID:          dbUser.ID,
+		ID:          user.ID,
+		Mail:        email,
 	})
 
 	err = db.Queries.VerifyUser(ctx, gen.VerifyUserParams{
 		Verified: true,
-		ID:       dbUser.ID,
+		ID:       user.ID,
 	})
 
 	w.WriteHeader(http.StatusNoContent)

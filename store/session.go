@@ -13,6 +13,11 @@ type Session struct {
 	*badger.DB
 }
 
+type SessionData struct {
+	SessionData *webauthn.SessionData
+	UserID      string
+}
+
 func initSession() (Session, error) {
 	var session Session
 	db, err := badger.Open(badger.DefaultOptions("./tmp/badger"))
@@ -24,7 +29,7 @@ func initSession() (Session, error) {
 	return session, nil
 }
 
-func (s Session) Set(key string, sessionData *webauthn.SessionData) error {
+func (s Session) Set(key string, sessionData SessionData) error {
 	sessionByte, err := json.Marshal(sessionData)
 	if err != nil {
 		return fmt.Errorf("could not marshal sessionData: %w", err)
@@ -41,8 +46,8 @@ func (s Session) Set(key string, sessionData *webauthn.SessionData) error {
 	return nil
 }
 
-func (s Session) Get(key string) (*webauthn.SessionData, error) {
-	var sessionData *webauthn.SessionData
+func (s Session) Get(key string) (SessionData, error) {
+	var sessionData SessionData
 
 	err := s.DB.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(key))
@@ -58,7 +63,7 @@ func (s Session) Get(key string) (*webauthn.SessionData, error) {
 		})
 	})
 	if err != nil {
-		return nil, err
+		return sessionData, err
 	}
 
 	return sessionData, nil

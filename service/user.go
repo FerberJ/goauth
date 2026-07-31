@@ -23,22 +23,22 @@ func NewUser(db store.DB, conf config.Config) *User {
 	}
 }
 
-func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido bool) (string, error) {
+func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido bool) (string, string, error) {
 	var passwordHash = ""
 	var err error
 
 	if !isFido {
 		if signup.Email == "" || signup.Name == "" || signup.Password == "" {
-			return "", fmt.Errorf("invalid request")
+			return "", "", fmt.Errorf("invalid request")
 		}
 		passwordHash, err = encryption.HashPassword(signup.Password)
 		if err != nil {
-			return "", fmt.Errorf("could not hash password: %w", err)
+			return "", "", fmt.Errorf("could not hash password: %w", err)
 		}
 	}
 	newID, err := u.db.CreateID(ctx, store.User)
 	if err != nil {
-		return "", fmt.Errorf("could not create a new ID for User: %w", err)
+		return "", "", fmt.Errorf("could not create a new ID for User: %w", err)
 	}
 
 	genUser := gen.CreateUserParams{
@@ -50,16 +50,16 @@ func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido b
 	}
 	user, err := u.db.Queries.CreateUser(ctx, genUser)
 	if err != nil {
-		return "", fmt.Errorf("could not create user: %w", err)
+		return "", "", fmt.Errorf("could not create user: %w", err)
 	}
 
 	v := NewVerification(u.db, u.config)
 	token, err := v.Create(ctx, user.ID)
 	if err != nil {
-		return "", fmt.Errorf("verification token could not be created: %w", err)
+		return "", "", fmt.Errorf("verification token could not be created: %w", err)
 	}
 
-	return token, nil
+	return token, user.ID, nil
 }
 
 func (u *User) Delete(ctx context.Context, id string) error {
