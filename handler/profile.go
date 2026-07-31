@@ -489,7 +489,7 @@ func HandleFinishSignup(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(user.Credentials)
 	//db.Queries.up
-	err = db.Queries.UserUpdateCredentials(ctx, gen.UserUpdateCredentialsParams{
+	err = db.Queries.UserUpdateSignupCredentials(ctx, gen.UserUpdateSignupCredentialsParams{
 		Credentials: json.RawMessage(data),
 		ID:          user.ID,
 		Mail:        email,

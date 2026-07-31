@@ -41,7 +41,7 @@ SET
   password_hash = ?
 WHERE id = ?;
 
--- name: UserUpdateCredentials :exec
+-- name: UserUpdateSignupCredentials :exec
 UPDATE auth_users
 SET
   credentials = ?,

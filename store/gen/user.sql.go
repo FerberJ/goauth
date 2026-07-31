@@ -126,25 +126,6 @@ func (q *Queries) UserIDExists(ctx context.Context, id string) (bool, error) {
 	return id_exists, err
 }
 
-const userUpdateCredentials = `-- name: UserUpdateCredentials :exec
-UPDATE auth_users
-SET
-  credentials = ?,
-  mail = ?
-WHERE id = ?
-`
-
-type UserUpdateCredentialsParams struct {
-	Credentials json.RawMessage
-	Mail        string
-	ID          string
-}
-
-func (q *Queries) UserUpdateCredentials(ctx context.Context, arg UserUpdateCredentialsParams) error {
-	_, err := q.db.ExecContext(ctx, userUpdateCredentials, arg.Credentials, arg.Mail, arg.ID)
-	return err
-}
-
 const userUpdatePassword = `-- name: UserUpdatePassword :exec
 UPDATE auth_users
 SET
@@ -159,6 +140,25 @@ type UserUpdatePasswordParams struct {
 
 func (q *Queries) UserUpdatePassword(ctx context.Context, arg UserUpdatePasswordParams) error {
 	_, err := q.db.ExecContext(ctx, userUpdatePassword, arg.PasswordHash, arg.ID)
+	return err
+}
+
+const userUpdateSignupCredentials = `-- name: UserUpdateSignupCredentials :exec
+UPDATE auth_users
+SET
+  credentials = ?,
+  mail = ?
+WHERE id = ?
+`
+
+type UserUpdateSignupCredentialsParams struct {
+	Credentials json.RawMessage
+	Mail        string
+	ID          string
+}
+
+func (q *Queries) UserUpdateSignupCredentials(ctx context.Context, arg UserUpdateSignupCredentialsParams) error {
+	_, err := q.db.ExecContext(ctx, userUpdateSignupCredentials, arg.Credentials, arg.Mail, arg.ID)
 	return err
 }
 
