@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"go/playground/config"
 	"go/playground/encryption"
@@ -22,13 +23,18 @@ func NewUser(db store.DB, conf config.Config) *User {
 	}
 }
 
-func (u *User) Create(ctx context.Context, signup models.SignupRequest) (string, error) {
-	if signup.Email == "" || signup.Name == "" || signup.Password == "" {
-		return "", fmt.Errorf("invalid request")
-	}
-	passwordHash, err := encryption.HashPassword(signup.Password)
-	if err != nil {
-		return "", fmt.Errorf("could not hash password: %w", err)
+func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido bool) (string, error) {
+	var passwordHash = ""
+	var err error
+
+	if !isFido {
+		if signup.Email == "" || signup.Name == "" || signup.Password == "" {
+			return "", fmt.Errorf("invalid request")
+		}
+		passwordHash, err = encryption.HashPassword(signup.Password)
+		if err != nil {
+			return "", fmt.Errorf("could not hash password: %w", err)
+		}
 	}
 	newID, err := u.db.CreateID(ctx, store.User)
 	if err != nil {
@@ -37,9 +43,10 @@ func (u *User) Create(ctx context.Context, signup models.SignupRequest) (string,
 
 	genUser := gen.CreateUserParams{
 		ID:           newID,
-		Name:         signup.Name,
+		Name:         store.StringToNullString(signup.Name),
 		Mail:         signup.Email,
-		PasswordHash: passwordHash,
+		PasswordHash: store.StringToNullString(passwordHash),
+		Credentials:  json.RawMessage([]byte("[]")),
 	}
 	user, err := u.db.Queries.CreateUser(ctx, genUser)
 	if err != nil {
@@ -73,10 +80,10 @@ func (u *User) GetFromMail(ctx context.Context, mail string) (models.User, error
 
 	user = models.User{
 		ID:       authUser.ID,
-		Name:     authUser.Name,
+		Name:     store.NullStringToString(authUser.Name),
 		Mail:     authUser.Mail,
-		Password: authUser.PasswordHash,
-		Verified: authUser.Verified,
+		Password: store.NullStringToString(authUser.PasswordHash),
+		// Verified: authUser.Verified,
 	}
 
 	return user, nil
@@ -91,10 +98,10 @@ func (u *User) Get(ctx context.Context, id string) (models.User, error) {
 
 	user = models.User{
 		ID:       authUser.ID,
-		Name:     authUser.Name,
+		Name:     store.NullStringToString(authUser.Name),
 		Mail:     authUser.Mail,
-		Password: authUser.PasswordHash,
-		Verified: authUser.Verified,
+		Password: store.NullStringToString(authUser.PasswordHash),
+		// Verified: authUser.Verified,
 	}
 
 	return user, nil
@@ -102,7 +109,7 @@ func (u *User) Get(ctx context.Context, id string) (models.User, error) {
 
 func (u *User) UpdateName(ctx context.Context, rename models.RenameRequest, id string) error {
 	err := u.db.Queries.UpdateUserName(ctx, gen.UpdateUserNameParams{
-		Name: rename.Name,
+		Name: store.StringToNullString(rename.Name),
 		ID:   id,
 	})
 	if err != nil {
@@ -142,7 +149,7 @@ func (u *User) UpdatePassword(ctx context.Context, passwords models.UpdatePasswo
 	}
 
 	err = u.db.Queries.UserUpdatePassword(ctx, gen.UserUpdatePasswordParams{
-		PasswordHash: passwordHash,
+		PasswordHash: store.StringToNullString(passwordHash),
 		ID:           id,
 	})
 	if err != nil {

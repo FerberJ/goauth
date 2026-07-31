@@ -1,7 +1,7 @@
 version: "2"
 sql:
   - engine: "sqlite"
-    queries: 
+    queries:
       - "store/queries/user.sql"
       - "store/queries/verification.sql"
       - "store/queries/refresh.sql"
@@ -11,3 +11,6 @@ sql:
       go:
         package: "gen"
         out: "store/gen"
+        overrides:
+          - column: "auth_users.credentials"
+            go_type: "encoding/json.RawMessage"

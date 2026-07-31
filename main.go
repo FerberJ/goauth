@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"go/playground/api"
+	"go/playground/auth"
 	"go/playground/config"
 	"go/playground/mail"
 	"go/playground/store"
@@ -34,10 +35,17 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	wa, _ := auth.Init()
+
 	//r.Post("/signup", handler.HandleSignup)
-	rout := api.GetRoutes(conf, st, mailClient)
+	rout := api.GetRoutes(conf, st, mailClient, wa)
 
 	r.Mount("/auth", rout)
+	fs := http.FileServer(http.Dir("./static"))
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		fs.ServeHTTP(w, r)
+	})
+	r.Handle("/*", fs)
 
 	chi.Walk(r, func(method, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		log.Println("AUTH ROUTE:", method, route)

@@ -8,12 +8,13 @@ import (
 	"go/playground/store"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-webauthn/webauthn/webauthn"
 )
 
-func GetRoutes(config config.Config, db store.DB, mc mail.MailClient) chi.Router {
+func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webauthn.WebAuthn) chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(middleware.WithAppContext(db, config, mc))
+	r.Use(middleware.WithAppContext(db, config, mc, wa))
 
 	r.Post("/signup", handler.HandleSignup)
 	r.Get("/verify/{token}", handler.HandleVerifyToken)
@@ -22,6 +23,11 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient) chi.Router
 	r.Post("/refresh", handler.HandleRefresh)
 	r.Post("/forgot-password", handler.HandleForgotPassword)
 	r.Post("/change-password", handler.HandleResetPassword)
+
+	r.Get("/fido/register/begin", handler.HandleBeginRegister)
+	r.Post("/fido/register/finish", handler.HandleFinishRegister)
+	r.Get("/fido/login/begin", handler.HandleBeginLogin)
+	r.Post("/fido/login/finish", handler.HandleFinishLogin)
 
 	m := r.With(middleware.Authorization)
 

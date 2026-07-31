@@ -120,3 +120,8 @@ func UpdatePasswordErr(w http.ResponseWriter, err error) {
 func RequestErr(w http.ResponseWriter, err error) {
 	responseWriter(w, "018", http.StatusBadRequest, err)
 }
+
+// 019
+func BeginRegistrationErr(w http.ResponseWriter, err error) {
+	responseWriter(w, "019", http.StatusInternalServerError, err)
+}

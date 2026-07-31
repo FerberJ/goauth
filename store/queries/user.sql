@@ -8,9 +8,9 @@ WHERE mail = ? LIMIT 1;
 
 -- name: CreateUser :one
 INSERT INTO auth_users (
-  id, name, password_hash, mail, verified
+  id, name, password_hash, mail, credentials, verified
 ) VALUES (
-  ?, ?, ?, ?, FALSE
+  ?, ?, ?, ?, ?, FALSE
 )
 RETURNING *;
 
@@ -39,4 +39,10 @@ SELECT EXISTS(
 UPDATE auth_users
 SET
   password_hash = ?
+WHERE id = ?;
+
+-- name: UserUpdateCredentials :exec
+UPDATE auth_users
+SET
+  credentials = ?
 WHERE id = ?;

@@ -28,6 +28,7 @@ func (e *MigrateError) Unwrap() error {
 type DB struct {
 	DB      *sql.DB
 	Queries *gen.Queries
+	Session Session
 }
 
 // Init Database with the Queries from sqlc
@@ -41,8 +42,17 @@ func Init(s *sql.DB) (DB, error) {
 	}
 
 	err := db.migrate()
+	if err != nil {
+		return db, err
+	}
 
-	return db, err
+	session, err := initSession()
+	if err != nil {
+		return db, err
+	}
+	db.Session = session
+
+	return db, nil
 }
 
 //go:embed migrations/*.sql

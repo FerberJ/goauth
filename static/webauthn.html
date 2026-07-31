@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebAuthn Registration</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: Arial, sans-serif;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #111827;
+        color: #f9fafb;
+      }
+
+      .card {
+        width: min(92vw, 520px);
+        padding: 24px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      }
+
+      h1 {
+        margin-top: 0;
+        font-size: 1.4rem;
+      }
+
+      label {
+        display: block;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        margin-top: 6px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #6b7280;
+        background: #fff;
+        color: #111827;
+      }
+
+      button {
+        margin-top: 16px;
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      button:disabled {
+        opacity: 0.7;
+        cursor: wait;
+      }
+
+      .status {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        white-space: pre-wrap;
+        font-size: 0.9rem;
+      }
+
+      .status.error {
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(248, 113, 113, 0.4);
+      }
+
+      .status.success {
+        background: rgba(22, 163, 74, 0.2);
+        border: 1px solid rgba(74, 222, 128, 0.4);
+      }
+
+      .muted {
+        color: #d1d5db;
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Register a security key</h1>
+      <p class="muted">Use this page to start a WebAuthn registration flow.</p>
+
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="user@example.com" required />
+
+      <button id="registerBtn" type="button">Register</button>
+      <div id="status" class="status">Waiting for input…</div>
+    </main>
+
+    <script>
+      const registerBtn = document.getElementById('registerBtn');
+      const emailInput = document.getElementById('email');
+      const statusEl = document.getElementById('status');
+
+      function showStatus(message, kind) {
+        statusEl.textContent = message;
+        statusEl.classList.remove('error', 'success');
+        if (kind) statusEl.classList.add(kind);
+      }
+
+      // --- base64url <-> ArrayBuffer helpers ---
+
+      function bufferToBase64url(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i += 1) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      }
+
+      function base64urlToBuffer(value) {
+        if (!value) return new ArrayBuffer(0);
+        if (value instanceof ArrayBuffer) return value;
+        if (ArrayBuffer.isView(value)) return value.buffer;
+        if (Array.isArray(value)) return Uint8Array.from(value).buffer;
+
+        let base64 = String(value).replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4 !== 0) {
+          base64 += '=';
+        }
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+
+      // --- Convert server JSON into CredentialCreationOptions ---
+
+      function convertOptions(rawOptions) {
+        // Some servers send { publicKey: {...} }, others send the options object
+        // directly at the top level. Support both so this page isn't tied to one
+        // backend's response shape.
+        const options = rawOptions && rawOptions.publicKey ? rawOptions.publicKey : rawOptions;
+
+        if (!options || typeof options !== 'object') {
+          throw new Error('No registration options were returned by the server.');
+        }
+        if (!options.challenge) {
+          throw new Error('Server response is missing "challenge".');
+        }
+        if (!options.rp || !options.rp.id) {
+          throw new Error('Server response is missing "rp" (relying party) info.');
+        }
+        if (!options.user || !options.user.id) {
+          throw new Error('Server response is missing "user" info.');
+        }
+        if (!Array.isArray(options.pubKeyCredParams) || options.pubKeyCredParams.length === 0) {
+          throw new Error(
+            'Server response is missing "pubKeyCredParams". Check the /auth/fido-register ' +
+              'endpoint — it must return an array like [{ type: "public-key", alg: -7 }, ' +
+              '{ type: "public-key", alg: -257 }].'
+          );
+        }
+
+        const publicKey = {
+          ...options,
+          challenge: base64urlToBuffer(options.challenge),
+          user: {
+            ...options.user,
+            id: base64urlToBuffer(options.user.id),
+          },
+          excludeCredentials: (options.excludeCredentials || []).map((cred) => ({
+            ...cred,
+            id: base64urlToBuffer(cred.id),
+          })),
+        };
+
+        return { publicKey };
+      }
+
+      async function register() {
+        const email = emailInput.value.trim();
+        if (!email) {
+          showStatus('Please enter an email address.', 'error');
+          return;
+        }
+
+        if (!window.PublicKeyCredential) {
+          showStatus('This browser does not support WebAuthn.', 'error');
+          return;
+        }
+
+        registerBtn.disabled = true;
+        showStatus('Starting registration…');
+
+        try {
+          const beginResponse = await fetch('/auth/fido-register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+
+          if (!beginResponse.ok) {
+            const text = await beginResponse.text().catch(() => '');
+            throw new Error(`Registration begin failed: ${beginResponse.status} ${text}`.trim());
+          }
+
+          const rawOptions = await beginResponse.json();
+          // Uncomment while debugging to inspect exactly what the server sent:
+          // console.log('Registration options from server:', rawOptions);
+
+          const credentialOptions = convertOptions(rawOptions);
+
+          showStatus('Waiting for your security key or biometric prompt…');
+          const credential = await navigator.credentials.create(credentialOptions);
+
+          if (!credential) {
+            throw new Error('No credential was created.');
+          }
+
+          const payload = {
+            id: credential.id,
+            rawId: bufferToBase64url(credential.rawId),
+            type: credential.type,
+            response: {
+              attestationObject: bufferToBase64url(credential.response.attestationObject),
+              clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+            },
+          };
+
+          showStatus('Finishing registration…');
+
+          const finishResponse = await fetch('/auth/fido-finish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!finishResponse.ok) {
+            const text = await finishResponse.text().catch(() => '');
+            throw new Error(text || `Registration finish failed: ${finishResponse.status}`);
+          }
+
+          showStatus('Registration completed successfully.', 'success');
+        } catch (error) {
+          console.error(error);
+          showStatus(error.message || 'Registration failed.', 'error');
+        } finally {
+          registerBtn.disabled = false;
+        }
+      }
+
+      registerBtn.addEventListener('click', register);
+    </script>
+  </body>
+</html>

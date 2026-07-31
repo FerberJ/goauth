@@ -1,10 +1,11 @@
 -- +goose Up
 CREATE TABLE auth_users (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
+    name TEXT,
+    password_hash TEXT,
     mail TEXT NOT NULL UNIQUE,
-    verified BOOLEAN NOT NULL DEFAULT FALSE
+    verified BOOLEAN NOT NULL DEFAULT FALSE,
+    credentials TEXT NOT NULL DEFAULT '[]'
 );
 
 CREATE TABLE auth_verification (
