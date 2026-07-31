@@ -1,3 +1,4 @@
 .env
 gen
 *.db
+tmp
