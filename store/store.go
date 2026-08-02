@@ -5,7 +5,8 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
-	"go/playground/store/gen"
+
+	"github.com/FerberJ/goauth/store/gen"
 
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"

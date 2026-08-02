@@ -2,11 +2,12 @@ package goauth
 
 import (
 	"database/sql"
-	"go/playground/api"
-	"go/playground/auth"
-	"go/playground/config"
-	"go/playground/mail"
-	"go/playground/store"
+
+	"github.com/FerberJ/goauth/api"
+	"github.com/FerberJ/goauth/auth"
+	"github.com/FerberJ/goauth/config"
+	"github.com/FerberJ/goauth/mail"
+	"github.com/FerberJ/goauth/store"
 
 	"github.com/go-chi/chi/v5"
 )

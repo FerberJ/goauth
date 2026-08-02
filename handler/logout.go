@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"go/playground/encryption"
-	errormsg "go/playground/error_msg"
-	"go/playground/middleware"
 	"net/http"
+
+	"github.com/FerberJ/goauth/encryption"
+	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/middleware"
 )
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) {

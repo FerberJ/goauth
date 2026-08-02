@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"go/playground/config"
-	"go/playground/encryption"
-	"go/playground/models"
-	"go/playground/store"
-	"go/playground/store/gen"
 	"time"
+
+	"github.com/FerberJ/goauth/config"
+	"github.com/FerberJ/goauth/encryption"
+	"github.com/FerberJ/goauth/models"
+	"github.com/FerberJ/goauth/store"
+	"github.com/FerberJ/goauth/store/gen"
 )
 
 type Refresh struct {

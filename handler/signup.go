@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	errormsg "go/playground/error_msg"
-	"go/playground/mail"
-	"go/playground/middleware"
-	"go/playground/models"
-	"go/playground/service"
-	"go/playground/store/gen"
 	"net/http"
+
+	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/mail"
+	"github.com/FerberJ/goauth/middleware"
+	"github.com/FerberJ/goauth/models"
+	"github.com/FerberJ/goauth/service"
+	"github.com/FerberJ/goauth/store/gen"
 
 	"github.com/google/uuid"
 )

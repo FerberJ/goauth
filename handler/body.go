@@ -3,8 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"go/playground/models"
 	"net/http"
+
+	"github.com/FerberJ/goauth/models"
 )
 
 func getValidBody[T models.Validate](r *http.Request) (T, error) {

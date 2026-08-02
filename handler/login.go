@@ -3,12 +3,13 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"go/playground/encryption"
-	errormsg "go/playground/error_msg"
-	"go/playground/middleware"
-	"go/playground/models"
-	"go/playground/store"
 	"net/http"
+
+	"github.com/FerberJ/goauth/encryption"
+	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/middleware"
+	"github.com/FerberJ/goauth/models"
+	"github.com/FerberJ/goauth/store"
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request) {

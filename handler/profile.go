@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"time"
 
-	"go/playground/encryption"
-	errormsg "go/playground/error_msg"
-	"go/playground/middleware"
-	"go/playground/models"
-	"go/playground/service"
-	"go/playground/store"
-	"go/playground/store/gen"
-	"go/playground/token"
 	"net/http"
+
+	"github.com/FerberJ/goauth/encryption"
+	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/middleware"
+	"github.com/FerberJ/goauth/models"
+	"github.com/FerberJ/goauth/service"
+	"github.com/FerberJ/goauth/store"
+	"github.com/FerberJ/goauth/store/gen"
+	"github.com/FerberJ/goauth/token"
 )
 
 func HandleProfile(w http.ResponseWriter, r *http.Request) {

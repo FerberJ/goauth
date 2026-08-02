@@ -2,8 +2,9 @@ package mail
 
 import (
 	"fmt"
-	"go/playground/config"
 	"net/url"
+
+	"github.com/FerberJ/goauth/config"
 
 	"github.com/wneessen/go-mail"
 )

@@ -2,11 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"go/playground/encryption"
-	errormsg "go/playground/error_msg"
-	"go/playground/middleware"
 	"net/http"
 	"time"
+
+	"github.com/FerberJ/goauth/encryption"
+	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/middleware"
 )
 
 func HandleRefresh(w http.ResponseWriter, r *http.Request) {

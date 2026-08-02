@@ -1,11 +1,11 @@
 package api
 
 import (
-	"go/playground/config"
-	"go/playground/handler"
-	"go/playground/mail"
-	"go/playground/middleware"
-	"go/playground/store"
+	"github.com/FerberJ/goauth/config"
+	"github.com/FerberJ/goauth/handler"
+	"github.com/FerberJ/goauth/mail"
+	"github.com/FerberJ/goauth/middleware"
+	"github.com/FerberJ/goauth/store"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-webauthn/webauthn/webauthn"

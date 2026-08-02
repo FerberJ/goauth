@@ -2,14 +2,15 @@ package handler
 
 import (
 	"fmt"
-	"go/playground/encryption"
-	errormsg "go/playground/error_msg"
-	"go/playground/mail"
-	"go/playground/middleware"
-	"go/playground/models"
-	"go/playground/service"
 	"net/http"
 	"time"
+
+	"github.com/FerberJ/goauth/encryption"
+	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/mail"
+	"github.com/FerberJ/goauth/middleware"
+	"github.com/FerberJ/goauth/models"
+	"github.com/FerberJ/goauth/service"
 )
 
 func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {

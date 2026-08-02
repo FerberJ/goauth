@@ -1,10 +1,11 @@
 package handler
 
 import (
-	errormsg "go/playground/error_msg"
-	"go/playground/middleware"
-	"go/playground/service"
 	"net/http"
+
+	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/middleware"
+	"github.com/FerberJ/goauth/service"
 
 	"github.com/go-chi/chi/v5"
 )

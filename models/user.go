@@ -3,9 +3,10 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	"go/playground/store"
-	"go/playground/store/gen"
 	"net/http"
+
+	"github.com/FerberJ/goauth/store"
+	"github.com/FerberJ/goauth/store/gen"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"

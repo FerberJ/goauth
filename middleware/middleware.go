@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go/playground/config"
-	"go/playground/mail"
-	"go/playground/store"
-	"go/playground/token"
 	"net/http"
+
+	"github.com/FerberJ/goauth/config"
+	"github.com/FerberJ/goauth/mail"
+	"github.com/FerberJ/goauth/store"
+	"github.com/FerberJ/goauth/token"
 
 	"github.com/go-webauthn/webauthn/webauthn"
 )
