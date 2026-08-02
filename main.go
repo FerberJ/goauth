@@ -1,3 +1,6 @@
+package goauth
+
+/*
 package main
 
 import (
@@ -13,7 +16,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func main() {
+func main2() {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -92,3 +95,5 @@ const verifyLoginEmailHTML = `<!DOCTYPE html>
 func buildVerifyLoginEmail(verifyURL string) string {
 	return fmt.Sprintf(verifyLoginEmailHTML, verifyURL)
 }
+
+*/
