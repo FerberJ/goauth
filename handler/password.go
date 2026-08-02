@@ -9,7 +9,6 @@ import (
 	"go/playground/models"
 	"go/playground/service"
 	"net/http"
-	"net/url"
 	"time"
 )
 
@@ -35,12 +34,13 @@ func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	t, err := getPasswordToken(ctx, u.ID, app)
 
-	verifyURL, err := url.JoinPath(cfg.Password.Endpoint, "reset-password", t)
+	// verifyURL, err := url.JoinPath(cfg.Password.Endpoint, "password", "reset", t)
+	message, subject, err := cfg.SMTP.ResetPasswordMail(cfg.Password.Endpoint, t)
 	if err != nil {
 		errormsg.JoinPathErr(w, err)
 		return
 	}
-	err = smtp.SendMail(cfg.SMTP.Username, resetRequest.Email, verifyURL, "reset password", mail.HTML)
+	err = smtp.SendMail(cfg.SMTP.Username, resetRequest.Email, message, subject, mail.HTML)
 	if err != nil {
 		errormsg.SendMailErr(w, err)
 		return

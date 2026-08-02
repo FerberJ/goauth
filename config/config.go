@@ -36,10 +36,12 @@ type Password struct {
 }
 
 type SMTP struct {
-	Client   string
-	Username string
-	Password string
-	Port     int
+	Client            string
+	Username          string
+	Password          string
+	Port              int
+	ResetPasswordMail func(cfgEndpoint string, token string) (message string, sunject string, err error)
+	VerifyUserMail    func(cfgEndpoint string, token string) (message string, sunject string, err error)
 }
 
 func GetConf(db *sql.DB) (Config, error) {

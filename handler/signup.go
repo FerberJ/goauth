@@ -12,7 +12,6 @@ import (
 	"go/playground/service"
 	"go/playground/store/gen"
 	"net/http"
-	"net/url"
 
 	"github.com/google/uuid"
 )
@@ -42,12 +41,12 @@ func HandleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	verifyURL, err := url.JoinPath(cfg.Verification.Endpoint, "verify", token)
+	message, subject, err := cfg.SMTP.VerifyUserMail(cfg.Password.Endpoint, token)
 	if err != nil {
 		errormsg.JoinPathErr(w, err)
 		return
 	}
-	err = smtp.SendMail(cfg.SMTP.Username, signupRequest.Email, verifyURL, "verify", mail.HTML)
+	err = smtp.SendMail(cfg.SMTP.Username, signupRequest.Email, message, subject, mail.HTML)
 	if err != nil {
 		errormsg.SendMailErr(w, err)
 		return
@@ -135,12 +134,12 @@ func HandleFinishSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	verifyURL, err := url.JoinPath(cfg.Verification.Endpoint, "verify", token)
+	message, subject, err := cfg.SMTP.VerifyUserMail(cfg.Password.Endpoint, token)
 	if err != nil {
 		errormsg.JoinPathErr(w, err)
 		return
 	}
-	err = smtp.SendMail(cfg.SMTP.Username, email, verifyURL, "verify", mail.HTML)
+	err = smtp.SendMail(cfg.SMTP.Username, email, message, subject, mail.HTML)
 	if err != nil {
 		errormsg.SendMailErr(w, err)
 		return

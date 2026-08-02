@@ -3,6 +3,7 @@ package mail
 import (
 	"fmt"
 	"go/playground/config"
+	"net/url"
 
 	"github.com/wneessen/go-mail"
 )
@@ -64,4 +65,22 @@ func (mc MailClient) SendMail(from, to, message, subject string, contentType Con
 		return fmt.Errorf("faild to send the email: %w", err)
 	}
 	return nil
+}
+
+func ResetPasswordMail(cfgEndpoint string, token string) (message string, sunject string, err error) {
+	resetURL, err := url.JoinPath(cfgEndpoint, "password", "reset", token)
+	if err != nil {
+		return "", "", err
+	}
+
+	return resetURL, "reset password", nil
+}
+
+func VerifyUserMail(cfgEndpoint string, token string) (message string, sunject string, err error) {
+	verifyURL, err := url.JoinPath(cfgEndpoint, "verify", token)
+	if err != nil {
+		return "", "", err
+	}
+
+	return verifyURL, "verify", nil
 }
