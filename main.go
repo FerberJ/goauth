@@ -3,11 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"go/playground/goauth"
 	"log"
 	"net/http"
 	"net/url"
 
+	"github.com/FerberJ/goauth/goauth"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/mattn/go-sqlite3"

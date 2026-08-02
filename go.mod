@@ -1,4 +1,4 @@
-module go/playground
+module github.com/FerberJ/goauth
 
 go 1.26.3
 
