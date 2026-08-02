@@ -1,12 +1,18 @@
 package models
 
 type ResetRequest struct {
-	Email string
+	Email string `validate:"required,email"`
+}
+
+func (t ResetRequest) Validate() error {
+	return validate(t)
 }
 
 type ResetPassword struct {
-	Email       string
-	Password    string
-	Token       string
-	OldPassword string
+	Password string `validate:"required"`
+	Token    string `validate:"required"`
+}
+
+func (t ResetPassword) Validate() error {
+	return validate(t)
 }

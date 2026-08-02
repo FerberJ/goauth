@@ -1,17 +1,30 @@
 package models
 
 type SignupRequest struct {
-	Name     string
-	Email    string
-	Password string
+	Name     string `validate:"required"`
+	Email    string `validate:"required,email"`
+	Password string `validate:"required"`
 }
+
+func (t SignupRequest) Validate() error {
+	return validate(t)
+}
+
 type RenameRequest struct {
-	Name string
+	Name string `validate:"required"`
+}
+
+func (t RenameRequest) Validate() error {
+	return validate(t)
 }
 
 type LoginRequest struct {
-	Email    string
-	Password string
+	Email    string `validate:"required,email"`
+	Password string `validate:"required"`
+}
+
+func (t LoginRequest) Validate() error {
+	return validate(t)
 }
 
 type UpdatePasswordRequest struct {
@@ -20,5 +33,10 @@ type UpdatePasswordRequest struct {
 }
 
 type UpdatePassword struct {
-	Password string
+	Password    string `validate:"required"`
+	OldPassword string `validate:"required"`
+}
+
+func (t UpdatePassword) Validate() error {
+	return validate(t)
 }

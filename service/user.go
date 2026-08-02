@@ -121,20 +121,35 @@ func (u *User) Exists(ctx context.Context, id string) (bool, error) {
 	return exists, nil
 }
 
-func (u *User) UpdatePassword(ctx context.Context, passwords models.UpdatePasswordRequest, id string, skipOldPassword bool) error {
+func (u *User) ResetPassword(ctx context.Context, password string, id string) error {
+	passwordHash, err := encryption.HashPassword(password)
+	if err != nil {
+		return fmt.Errorf("could not hash password: %w", err)
+	}
+
+	err = u.db.Queries.UserUpdatePassword(ctx, gen.UserUpdatePasswordParams{
+		PasswordHash: store.StringToNullString(passwordHash),
+		ID:           id,
+	})
+	if err != nil {
+		return fmt.Errorf("could not update users new password: %w", err)
+	}
+
+	return nil
+}
+
+func (u *User) ChangePassword(ctx context.Context, passwords models.UpdatePasswordRequest, id string) error {
 	user, err := u.Get(ctx, id)
 	if err != nil {
 		return fmt.Errorf("could not find user: %w", err)
 	}
 
-	if !skipOldPassword {
-		ok, err := encryption.CompareHash(user.Password, passwords.OldPassword)
-		if err != nil {
-			return fmt.Errorf("could not compare passwords: %w", err)
-		}
-		if !ok {
-			return fmt.Errorf("wrong password")
-		}
+	ok, err := encryption.CompareHash(user.Password, passwords.OldPassword)
+	if err != nil {
+		return fmt.Errorf("could not compare passwords: %w", err)
+	}
+	if !ok {
+		return fmt.Errorf("wrong password")
 	}
 
 	passwordHash, err := encryption.HashPassword(passwords.NewPassword)

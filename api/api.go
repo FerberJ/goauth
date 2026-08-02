@@ -27,13 +27,15 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 	r.Post("/login/fido/finish", handler.HandleFinishLogin)
 
 	r.Post("/logout", handler.HandleLogout)
+
 	r.Post("/refresh", handler.HandleRefresh)
 
 	r.Post("/password/forgot", handler.HandleForgotPassword)
-	r.Post("/password/change", handler.HandleResetPassword)
-	// on endpoint for reset (change and reset are in the same endpoint /password/change)
+	r.Post("/password/reset", handler.HandleResetPassword) // Need the token from /password/forgot
 
 	m := r.With(middleware.Authorization)
+
+	m.Post("/password/change", handler.HandleChangePassword)
 
 	m.Put("/profile/fido/begin", handler.HandleBeginRegister)
 	m.Put("/profile/fido/finish", handler.HandleFinishRegister)

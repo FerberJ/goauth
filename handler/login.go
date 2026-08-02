@@ -1,0 +1,161 @@
+package handler
+
+import (
+	"encoding/json"
+	"fmt"
+	"go/playground/encryption"
+	errormsg "go/playground/error_msg"
+	"go/playground/middleware"
+	"go/playground/models"
+	"go/playground/store"
+	"net/http"
+)
+
+func HandleLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	loginRequest, err := getValidBody[models.LoginRequest](r)
+	if err != nil {
+		errormsg.DecodeErr(w, err)
+		return
+	}
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+
+	u, err := db.Queries.GetFromMail(ctx, loginRequest.Email)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+
+	if !u.PasswordHash.Valid {
+		errormsg.ValidatePasswordErr(w, fmt.Errorf("password is not valid"))
+	}
+	valid, err := encryption.CompareHash(store.NullStringToString(u.PasswordHash), loginRequest.Password)
+	if err != nil {
+		errormsg.ValidatePasswordErr(w, err)
+		return
+	}
+	if !valid {
+		errormsg.ValidatePasswordErr(w, fmt.Errorf("password is not valid"))
+		return
+	}
+
+	t, err := getTokens(ctx, u.ID, app)
+	if err != nil {
+		errormsg.GetTokenErr(w, err)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "authorization",
+		Value:    t.JWT,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh",
+		Value:    t.Refresh,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func HandleBeginLogin(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	ctx := r.Context()
+	email := r.URL.Query().Get("email")
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	wa := app.Auth
+
+	u, err := db.Queries.GetFromMail(ctx, email)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+	user, err = models.GetUser(u)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+
+	credentials, err := user.BeginLogin(db, wa)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(credentials)
+}
+
+func HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+	ctx := r.Context()
+	email := r.URL.Query().Get("email")
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	wa := app.Auth
+
+	u, err := db.Queries.GetFromMail(ctx, email)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+	user, err = models.GetUser(u)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+
+	err = user.FinishLogin(db, wa, r)
+	if err != nil {
+		errormsg.RequestErr(w, err)
+		return
+	}
+
+	t, err := getTokens(ctx, u.ID, app)
+	if err != nil {
+		errormsg.GetTokenErr(w, err)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "authorization",
+		Value:    t.JWT,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh",
+		Value:    t.Refresh,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	w.WriteHeader(http.StatusNoContent)
+}

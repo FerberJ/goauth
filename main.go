@@ -37,7 +37,6 @@ func main() {
 
 	wa, _ := auth.Init()
 
-	//r.Post("/signup", handler.HandleSignup)
 	rout := api.GetRoutes(conf, st, mailClient, wa)
 
 	r.Mount("/auth", rout)

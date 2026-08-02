@@ -127,6 +127,11 @@ func BeginRegistrationErr(w http.ResponseWriter, err error) {
 }
 
 // 020
-func UserAlreadyExists(w http.ResponseWriter, err error) {
+func UserAlreadyExistsErr(w http.ResponseWriter, err error) {
 	responseWriter(w, "020", http.StatusBadRequest, err)
+}
+
+// 021
+func ResetPasswordErr(w http.ResponseWriter, err error) {
+	responseWriter(w, "021", http.StatusInternalServerError, err)
 }
