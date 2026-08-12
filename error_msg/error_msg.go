@@ -135,3 +135,8 @@ func UserAlreadyExistsErr(w http.ResponseWriter, err error) {
 func ResetPasswordErr(w http.ResponseWriter, err error) {
 	responseWriter(w, "021", http.StatusInternalServerError, err)
 }
+
+// 022
+func ParseQueryErr(w http.ResponseWriter, err error) {
+	responseWriter(w, "022", http.StatusBadRequest, err)
+}

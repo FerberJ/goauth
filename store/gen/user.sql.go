@@ -11,18 +11,37 @@ import (
 	"encoding/json"
 )
 
+const countUsers = `-- name: CountUsers :one
+SELECT COUNT(*) FROM auth_users
+LIMIT ?2 OFFSET ?1
+`
+
+type CountUsersParams struct {
+	Offset int64
+	Limit  int64
+}
+
+func (q *Queries) CountUsers(ctx context.Context, arg CountUsersParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUsers, arg.Offset, arg.Limit)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO auth_users (
-  id, name, password_hash, mail, credentials, verified
+  id, username, firstname, lastname, password_hash, mail, credentials, verified
 ) VALUES (
-  ?, ?, ?, ?, ?, FALSE
+  ?, ?, ?, ?, ?, ?, ?, FALSE
 )
-RETURNING id, name, password_hash, mail, verified, credentials
+RETURNING id, username, firstname, lastname, password_hash, mail, verified, credentials, admin
 `
 
 type CreateUserParams struct {
 	ID           string
-	Name         sql.NullString
+	Username     sql.NullString
+	Firstname    sql.NullString
+	Lastname     sql.NullString
 	PasswordHash sql.NullString
 	Mail         string
 	Credentials  json.RawMessage
@@ -31,7 +50,9 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUser, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ID,
-		arg.Name,
+		arg.Username,
+		arg.Firstname,
+		arg.Lastname,
 		arg.PasswordHash,
 		arg.Mail,
 		arg.Credentials,
@@ -39,11 +60,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUse
 	var i AuthUser
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.Username,
+		&i.Firstname,
+		&i.Lastname,
 		&i.PasswordHash,
 		&i.Mail,
 		&i.Verified,
 		&i.Credentials,
+		&i.Admin,
 	)
 	return i, err
 }
@@ -59,7 +83,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id string) error {
 }
 
 const getFromMail = `-- name: GetFromMail :one
-SELECT id, name, password_hash, mail, verified, credentials FROM auth_users
+SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin FROM auth_users
 WHERE mail = ? LIMIT 1
 `
 
@@ -68,17 +92,20 @@ func (q *Queries) GetFromMail(ctx context.Context, mail string) (AuthUser, error
 	var i AuthUser
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.Username,
+		&i.Firstname,
+		&i.Lastname,
 		&i.PasswordHash,
 		&i.Mail,
 		&i.Verified,
 		&i.Credentials,
+		&i.Admin,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, password_hash, mail, verified, credentials FROM auth_users
+SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin FROM auth_users
 WHERE id = ? LIMIT 1
 `
 
@@ -87,29 +114,88 @@ func (q *Queries) GetUser(ctx context.Context, id string) (AuthUser, error) {
 	var i AuthUser
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.Username,
+		&i.Firstname,
+		&i.Lastname,
 		&i.PasswordHash,
 		&i.Mail,
 		&i.Verified,
 		&i.Credentials,
+		&i.Admin,
 	)
 	return i, err
 }
 
-const updateUserName = `-- name: UpdateUserName :exec
+const getUsers = `-- name: GetUsers :many
+SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin FROM auth_users
+ORDER BY id
+LIMIT ?2 OFFSET ?1
+`
+
+type GetUsersParams struct {
+	Offset int64
+	Limit  int64
+}
+
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser, error) {
+	rows, err := q.db.QueryContext(ctx, getUsers, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AuthUser
+	for rows.Next() {
+		var i AuthUser
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Firstname,
+			&i.Lastname,
+			&i.PasswordHash,
+			&i.Mail,
+			&i.Verified,
+			&i.Credentials,
+			&i.Admin,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateUser = `-- name: UpdateUser :exec
 UPDATE auth_users
 SET
-  name = ?
+  username = ?,
+  firstname = ?, 
+  lastname = ?, 
+  mail = ?
 WHERE id = ?
 `
 
-type UpdateUserNameParams struct {
-	Name sql.NullString
-	ID   string
+type UpdateUserParams struct {
+	Username  sql.NullString
+	Firstname sql.NullString
+	Lastname  sql.NullString
+	Mail      string
+	ID        string
 }
 
-func (q *Queries) UpdateUserName(ctx context.Context, arg UpdateUserNameParams) error {
-	_, err := q.db.ExecContext(ctx, updateUserName, arg.Name, arg.ID)
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateUser,
+		arg.Username,
+		arg.Firstname,
+		arg.Lastname,
+		arg.Mail,
+		arg.ID,
+	)
 	return err
 }
 

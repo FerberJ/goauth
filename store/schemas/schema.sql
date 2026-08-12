@@ -1,10 +1,13 @@
 CREATE TABLE auth_users (
     id TEXT PRIMARY KEY,
-    name TEXT,
+    username TEXT,
+    firstname TEXT,
+    lastname TEXT,
     password_hash TEXT,
     mail TEXT NOT NULL UNIQUE,
     verified BOOLEAN NOT NULL DEFAULT FALSE,
-    credentials TEXT NOT NULL DEFAULT '[]'
+    credentials TEXT NOT NULL DEFAULT '[]',
+    admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE auth_verification (

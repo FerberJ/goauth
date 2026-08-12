@@ -29,11 +29,14 @@ type AuthRefresh struct {
 
 type AuthUser struct {
 	ID           string
-	Name         sql.NullString
+	Username     sql.NullString
+	Firstname    sql.NullString
+	Lastname     sql.NullString
 	PasswordHash sql.NullString
 	Mail         string
 	Verified     bool
 	Credentials  json.RawMessage
+	Admin        bool
 }
 
 type AuthVerification struct {

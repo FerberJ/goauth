@@ -14,11 +14,14 @@ import (
 
 type User struct {
 	ID          string                `json:"id"`
-	Name        string                `json:"name"`
+	Username    string                `json:"username"`
+	Firstname   string                `json:"firstname"`
+	Lastname    string                `json:"lastname"`
 	Mail        string                `json:"mail"`
 	Password    string                `json:"-"`
 	Verified    bool                  `json:"-"`
 	Credentials []webauthn.Credential `json:"-"`
+	Admin       bool                  `json:"admin"`
 }
 
 func (u *User) WebAuthnID() []byte                         { return []byte(u.ID) }
@@ -37,11 +40,14 @@ func GetUser(u gen.AuthUser) (User, error) {
 
 	user = User{
 		ID:          u.ID,
-		Name:        store.NullStringToString(u.Name),
+		Username:    store.NullStringToString(u.Username),
+		Firstname:   store.NullStringToString(u.Firstname),
+		Lastname:    store.NullStringToString(u.Lastname),
 		Mail:        u.Mail,
 		Password:    store.NullStringToString(u.PasswordHash),
 		Verified:    u.Verified,
 		Credentials: creds,
+		Admin:       u.Admin,
 	}
 
 	return user, nil

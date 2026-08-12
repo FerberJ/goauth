@@ -78,7 +78,7 @@ func HandleBeginSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, userID, err := userService.Create(ctx, models.SignupRequest{
-		Name:     "",
+		Username: "",
 		Email:    uuid.NewString(),
 		Password: "",
 	}, true)

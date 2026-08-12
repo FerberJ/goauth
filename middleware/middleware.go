@@ -8,6 +8,7 @@ import (
 
 	"github.com/FerberJ/goauth/config"
 	"github.com/FerberJ/goauth/mail"
+	"github.com/FerberJ/goauth/service"
 	"github.com/FerberJ/goauth/store"
 	"github.com/FerberJ/goauth/token"
 
@@ -103,6 +104,36 @@ func GetAppContext(ctx context.Context) (AppContext, error) {
 		return AppContext{}, errors.New("app context not found")
 	}
 	return app, nil
+}
+
+func Admin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		appContext, err := GetAppContext(r.Context())
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		claim, err := GetClaim(r.Context())
+		if err != nil {
+			http.Error(w, "cant get claim", http.StatusUnauthorized)
+			return
+		}
+
+		userService := service.NewUser(appContext.DB, appContext.Config)
+
+		user, err := userService.Get(r.Context(), claim.UserID)
+		if err != nil {
+			http.Error(w, "cant get user", http.StatusBadRequest)
+			return
+		}
+
+		if !user.Admin {
+			http.Error(w, "user is not admin", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r.WithContext(r.Context()))
+	})
 }
 
 func Authorization(next http.Handler) http.Handler {

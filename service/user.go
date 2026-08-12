@@ -29,7 +29,7 @@ func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido b
 	var err error
 
 	if !isFido {
-		if signup.Email == "" || signup.Name == "" || signup.Password == "" {
+		if signup.Email == "" || signup.Username == "" || signup.Password == "" {
 			return "", "", fmt.Errorf("invalid request")
 		}
 		passwordHash, err = encryption.HashPassword(signup.Password)
@@ -44,7 +44,7 @@ func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido b
 
 	genUser := gen.CreateUserParams{
 		ID:           newID,
-		Name:         store.StringToNullString(signup.Name),
+		Username:     store.StringToNullString(signup.Username),
 		Mail:         signup.Email,
 		PasswordHash: store.StringToNullString(passwordHash),
 		Credentials:  json.RawMessage([]byte("[]")),
@@ -102,10 +102,12 @@ func (u *User) Get(ctx context.Context, id string) (models.User, error) {
 	return user, nil
 }
 
-func (u *User) UpdateName(ctx context.Context, rename models.RenameRequest, id string) error {
-	err := u.db.Queries.UpdateUserName(ctx, gen.UpdateUserNameParams{
-		Name: store.StringToNullString(rename.Name),
-		ID:   id,
+func (u *User) UpdateUser(ctx context.Context, user models.UpdateRequest, id string) error {
+	err := u.db.Queries.UpdateUser(ctx, gen.UpdateUserParams{
+		Username:  store.StringToNullString(user.Username),
+		Firstname: store.StringToNullString(user.Firstname),
+		Lastname:  store.StringToNullString(user.Lastname),
+		ID:        id,
 	})
 	if err != nil {
 		return fmt.Errorf("could not rename the user: %w", err)

@@ -8,9 +8,9 @@ WHERE mail = ? LIMIT 1;
 
 -- name: CreateUser :one
 INSERT INTO auth_users (
-  id, name, password_hash, mail, credentials, verified
+  id, username, firstname, lastname, password_hash, mail, credentials, verified
 ) VALUES (
-  ?, ?, ?, ?, ?, FALSE
+  ?, ?, ?, ?, ?, ?, ?, FALSE
 )
 RETURNING *;
 
@@ -20,10 +20,13 @@ SET
   verified = ?
 WHERE id = ?;
 
--- name: UpdateUserName :exec
+-- name: UpdateUser :exec
 UPDATE auth_users
 SET
-  name = ?
+  username = ?,
+  firstname = ?, 
+  lastname = ?, 
+  mail = ?
 WHERE id = ?;
 
 -- name: DeleteUser :exec
@@ -47,3 +50,12 @@ SET
   credentials = ?,
   mail = ?
 WHERE id = ?;
+
+-- name: GetUsers :many
+SELECT * FROM auth_users
+ORDER BY id
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: CountUsers :one
+SELECT COUNT(*) FROM auth_users
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');

@@ -39,9 +39,12 @@ func HandleProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u := models.User{
-		ID:   user.ID,
-		Name: store.NullStringToString(user.Name),
-		Mail: user.Mail,
+		ID:        user.ID,
+		Username:  store.NullStringToString(user.Username),
+		Firstname: store.NullStringToString(user.Firstname),
+		Lastname:  store.NullStringToString(user.Lastname),
+		Mail:      user.Mail,
+		Admin:     user.Admin,
 	}
 
 	payload, err := json.Marshal(u)
@@ -51,7 +54,7 @@ func HandleProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func HandleChangeName(w http.ResponseWriter, r *http.Request) {
+func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	app, err := middleware.GetAppContext(r.Context())
 	if err != nil {
@@ -69,12 +72,12 @@ func HandleChangeName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	renameRequest, err := getValidBody[models.RenameRequest](r)
+	updateRequest, err := getValidBody[models.UpdateRequest](r)
 	if err != nil {
 		errormsg.DecodeErr(w, err)
 		return
 	}
-	err = u.UpdateName(ctx, renameRequest, c.UserID)
+	err = u.UpdateUser(ctx, updateRequest, c.UserID)
 	if err != nil {
 		errormsg.UpdateErr(w, err)
 		return

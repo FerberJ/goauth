@@ -40,7 +40,13 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 	m.Put("/profile/fido/begin", handler.HandleBeginRegister)
 	m.Put("/profile/fido/finish", handler.HandleFinishRegister)
 	m.Get("/profile", handler.HandleProfile)
-	m.Patch("/profile/name", handler.HandleChangeName)
+	m.Put("/profile", handler.HandleProfileUpdate)
+
+	a := m.With(middleware.Admin)
+
+	a.Get("/admin/users", handler.HandleListUsers)
+	a.Get("/admin/users/{id}", handler.HandleGetUsers)
+	a.Put("/admin/users/{id}", handler.HandleUserUpdate)
 
 	return r
 }
