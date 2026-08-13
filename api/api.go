@@ -14,45 +14,46 @@ import (
 func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webauthn.WebAuthn) chi.Router {
 	r := chi.NewRouter()
 
-	r.Use(middleware.WithAppContext(db, config, mc, wa))
+	mw := middleware.NewMiddleware(db, config, mc, wa)
+	h := handler.NewHandler(db, config, mc, wa)
 
-	r.Post("/signup", handler.HandleSignup)
-	r.Post("/signup/fido/begin", handler.HandleBeginSignup)
-	r.Post("/signup/fido/finish", handler.HandleFinishSignup)
+	r.Post("/signup", h.HandleSignup)
+	r.Post("/signup/fido/begin", h.HandleBeginSignup)
+	r.Post("/signup/fido/finish", h.HandleFinishSignup)
 
-	r.Get("/verify/{token}", handler.HandleVerifyToken)
+	r.Get("/verify/{token}", h.HandleVerifyToken)
 
-	r.Post("/login", handler.HandleLogin)
-	r.Get("/login/fido/begin", handler.HandleBeginLogin)
-	r.Post("/login/fido/finish", handler.HandleFinishLogin)
+	r.Post("/login", h.HandleLogin)
+	r.Get("/login/fido/begin", h.HandleBeginLogin)
+	r.Post("/login/fido/finish", h.HandleFinishLogin)
 
-	r.Post("/logout", handler.HandleLogout)
+	r.Post("/logout", h.HandleLogout)
 
-	r.Post("/refresh", handler.HandleRefresh)
+	r.Post("/refresh", h.HandleRefresh)
 
-	r.Post("/password/forgot", handler.HandleForgotPassword)
-	r.Post("/password/reset", handler.HandleResetPassword) // Need the token from /password/forgot
+	r.Post("/password/forgot", h.HandleForgotPassword)
+	r.Post("/password/reset", h.HandleResetPassword) // Need the token from /password/forgot
 
-	m := r.With(middleware.Authorization)
+	m := r.With(mw.Authorization)
 
-	m.Post("/profile/password/change", handler.HandleChangePassword)
+	m.Post("/profile/password/change", h.HandleChangePassword)
 
-	m.Get("/profile/fido/begin", handler.HandleBeginRegister)
-	m.Post("/profile/fido/finish", handler.HandleFinishRegister)
-	m.Get("/profile", handler.HandleProfile)
-	m.Put("/profile", handler.HandleProfileUpdate)
-	m.Delete("/profile", handler.HandleProfileDelete)
-	m.Put("/profile/image", handler.HandleSetProfileImage)
-	m.Get("/profile/image", handler.HandleGetProfileImage)
+	m.Get("/profile/fido/begin", h.HandleBeginRegister)
+	m.Post("/profile/fido/finish", h.HandleFinishRegister)
+	m.Get("/profile", h.HandleProfile)
+	m.Put("/profile", h.HandleProfileUpdate)
+	m.Delete("/profile", h.HandleProfileDelete)
+	m.Put("/profile/image", h.HandleSetProfileImage)
+	m.Get("/profile/image", h.HandleGetProfileImage)
 
-	a := m.With(middleware.Admin)
+	a := m.With(mw.Admin)
 
-	a.Post("/admin/users", handler.HandleCreateUser)
-	a.Get("/admin/users", handler.HandleListUsers)
-	a.Get("/admin/users/{id}", handler.HandleGetUsers)
-	a.Post("/admin/users/{id}/verify", handler.HandleUserVerify)
-	a.Put("/admin/users/{id}", handler.HandleUserUpdate)
-	a.Delete("/admin/users/{id}", handler.HandleUserDelete)
+	a.Post("/admin/users", h.HandleCreateUser)
+	a.Get("/admin/users", h.HandleListUsers)
+	a.Get("/admin/users/{id}", h.HandleGetUsers)
+	a.Post("/admin/users/{id}/verify", h.HandleUserVerify)
+	a.Put("/admin/users/{id}", h.HandleUserUpdate)
+	a.Delete("/admin/users/{id}", h.HandleUserDelete)
 
 	return r
 }

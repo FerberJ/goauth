@@ -18,14 +18,8 @@ import (
 	"github.com/FerberJ/goauth/token"
 )
 
-func HandleProfile(w http.ResponseWriter, r *http.Request) {
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
+func (h Handler) HandleProfile(w http.ResponseWriter, r *http.Request) {
+	db := h.db
 
 	c, err := middleware.GetClaim(r.Context())
 	if err != nil {
@@ -55,15 +49,11 @@ func HandleProfile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-	db := app.DB
-	cfg := app.Config
+
+	db := h.db
+	cfg := h.config
 
 	u := service.NewUser(db, cfg)
 
@@ -85,15 +75,11 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleProfileDelete(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleProfileDelete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-	db := app.DB
-	cfg := app.Config
+
+	db := h.db
+	cfg := h.config
 
 	u := service.NewUser(db, cfg)
 
@@ -110,7 +96,7 @@ func HandleProfileDelete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	token, err := middleware.GetClaim(ctx)
@@ -119,15 +105,9 @@ func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	wa := app.Auth
-	cfg := app.Config
+	db := h.db
+	wa := h.auth
+	cfg := h.config
 
 	userService := service.NewUser(db, cfg)
 
@@ -147,7 +127,7 @@ func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(credentials)
 }
 
-func HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	token, err := middleware.GetClaim(ctx)
@@ -156,15 +136,9 @@ func HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	wa := app.Auth
-	cfg := app.Config
+	db := h.db
+	wa := h.auth
+	cfg := h.config
 
 	userService := service.NewUser(db, cfg)
 
@@ -187,27 +161,27 @@ func HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func getPasswordToken(ctx context.Context, userID string, app middleware.AppContext) (string, error) {
-	cfg := app.Config
-	db := app.DB
+func getPasswordToken(ctx context.Context, userID string, h Handler) (string, error) {
+	cfg := h.config
+	db := h.db
 
 	p := service.NewPassword(db, cfg)
 
 	return p.Create(ctx, userID)
 }
 
-func getVerification(ctx context.Context, userID string, app middleware.AppContext) (string, error) {
-	cfg := app.Config
-	db := app.DB
+func getVerification(ctx context.Context, userID string, h Handler) (string, error) {
+	cfg := h.config
+	db := h.db
 
 	v := service.NewVerification(db, cfg)
 
 	return v.Create(ctx, userID)
 }
 
-func getTokens(ctx context.Context, userID string, app middleware.AppContext) (token.Tokens, error) {
-	cfg := app.Config
-	db := app.DB
+func getTokens(ctx context.Context, userID string, h Handler) (token.Tokens, error) {
+	cfg := h.config
+	db := h.db
 
 	t, err := token.CreateTokens(userID, cfg.Secret)
 	if err != nil {
@@ -234,17 +208,11 @@ func getTokens(ctx context.Context, userID string, app middleware.AppContext) (t
 	return t, nil
 }
 
-func HandleSetProfileImage(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleSetProfileImage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	cfg := app.Config
+	db := h.db
+	cfg := h.config
 
 	c, err := middleware.GetClaim(r.Context())
 	if err != nil {
@@ -287,17 +255,11 @@ func HandleSetProfileImage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func HandleGetProfileImage(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleGetProfileImage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	cfg := app.Config
+	db := h.db
+	cfg := h.config
 
 	c, err := middleware.GetClaim(r.Context())
 	if err != nil {

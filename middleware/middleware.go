@@ -2,12 +2,10 @@ package middleware
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/FerberJ/goauth/config"
-	errormsg "github.com/FerberJ/goauth/error_msg"
 	"github.com/FerberJ/goauth/mail"
 	"github.com/FerberJ/goauth/service"
 	"github.com/FerberJ/goauth/store"
@@ -25,52 +23,31 @@ const (
 	appCtxKey    = "appCtxKey"
 )
 
-type AppContext struct {
-	DB     store.DB
-	Config config.Config
-	SMTP   mail.MailClient
-	Auth   *webauthn.WebAuthn
+type Middleware struct {
+	db     store.DB
+	config config.Config
+	smtp   mail.MailClient
+	auth   *webauthn.WebAuthn
 }
 
-func WithAppContext(db store.DB, conf config.Config, mailClient mail.MailClient, webauth *webauthn.WebAuthn) func(http.Handler) http.Handler {
-	app := AppContext{
-		DB:     db,
-		Config: conf,
-		SMTP:   mailClient,
-		Auth:   webauth,
-	}
-
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), appCtxKey, app)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
+func NewMiddleware(db store.DB, conf config.Config, mailClient mail.MailClient, webauth *webauthn.WebAuthn) Middleware {
+	return Middleware{
+		db:     db,
+		config: conf,
+		smtp:   mailClient,
+		auth:   webauth,
 	}
 }
 
-func GetAppContext(ctx context.Context) (AppContext, error) {
-	app, ok := ctx.Value(appCtxKey).(AppContext)
-	if !ok {
-		return AppContext{}, errors.New("app context not found")
-	}
-	return app, nil
-}
-
-func Admin(next http.Handler) http.Handler {
+func (mw Middleware) Admin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		appContext, err := GetAppContext(r.Context())
-		if err != nil {
-			errormsg.AppContextErr(w, err)
-			return
-		}
-
 		claim, err := GetClaim(r.Context())
 		if err != nil {
 			http.Error(w, "cant get claim", http.StatusUnauthorized)
 			return
 		}
 
-		userService := service.NewUser(appContext.DB, appContext.Config)
+		userService := service.NewUser(mw.db, mw.config)
 
 		user, err := userService.Get(r.Context(), claim.UserID)
 		if err != nil {
@@ -86,20 +63,14 @@ func Admin(next http.Handler) http.Handler {
 	})
 }
 
-func Authorization(next http.Handler) http.Handler {
+func (mw Middleware) Authorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		appContext, err := GetAppContext(r.Context())
-		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
 		cookie, err := r.Cookie("authorization")
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		c, err := token.VerifyToken(cookie.Value, appContext.Config.Secret)
+		c, err := token.VerifyToken(cookie.Value, mw.config.Secret)
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
@@ -109,6 +80,7 @@ func Authorization(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
 func GetClaim(ctx context.Context) (*token.Claims, error) {
 	claim, ok := ctx.Value(claimCtxKey).(*token.Claims)
 	if !ok {

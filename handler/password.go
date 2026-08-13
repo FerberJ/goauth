@@ -13,7 +13,7 @@ import (
 	"github.com/FerberJ/goauth/service"
 )
 
-func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	resetRequest, err := getValidBody[models.ResetRequest](r)
 	if err != nil {
@@ -21,19 +21,13 @@ func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	cfg := app.Config
-	smtp := app.SMTP
+	db := h.db
+	cfg := h.config
+	smtp := h.smtp
 
 	u, err := db.Queries.GetFromMail(ctx, resetRequest.Email)
 
-	t, err := getPasswordToken(ctx, u.ID, app)
+	t, err := getPasswordToken(ctx, u.ID, h)
 
 	// verifyURL, err := url.JoinPath(cfg.Password.Endpoint, "password", "reset", t)
 	message, subject, err := cfg.SMTP.ResetPasswordMail(cfg.Password.Endpoint, t)
@@ -50,7 +44,7 @@ func HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func HandleResetPassword(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	resetPassword, err := getValidBody[models.ResetPassword](r)
 	if err != nil {
@@ -58,14 +52,8 @@ func HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	cfg := app.Config
+	db := h.db
+	cfg := h.config
 
 	p := service.NewPassword(db, cfg)
 	u := service.NewUser(db, cfg)
@@ -96,17 +84,11 @@ func HandleResetPassword(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func HandleChangePassword(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleChangePassword(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	resetPassword, err := getValidBody[models.UpdatePassword](r)
 	if err != nil {
 		errormsg.DecodeErr(w, err)
-		return
-	}
-
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
 		return
 	}
 
@@ -116,8 +98,8 @@ func HandleChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := app.DB
-	cfg := app.Config
+	db := h.db
+	cfg := h.config
 
 	u := service.NewUser(db, cfg)
 	err = u.ChangePassword(ctx, models.UpdatePasswordRequest{

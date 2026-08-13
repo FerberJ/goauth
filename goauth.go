@@ -7,15 +7,17 @@ import (
 	"github.com/FerberJ/goauth/auth"
 	"github.com/FerberJ/goauth/config"
 	"github.com/FerberJ/goauth/mail"
+	"github.com/FerberJ/goauth/middleware"
 	"github.com/FerberJ/goauth/store"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type Goauth struct {
-	router chi.Router
-	conf   config.Config
-	err    error
+	router     chi.Router
+	conf       config.Config
+	err        error
+	middleware middleware.Middleware
 }
 
 func New(db *sql.DB) *Goauth {
@@ -50,6 +52,10 @@ func (a *Goauth) WithCustomVerifyUserMail(m func(cfgEndpoint string, token strin
 	return a
 }
 
+func (a *Goauth) Middleware() middleware.Middleware {
+	return a.middleware
+}
+
 func (a *Goauth) SetupRoutes() *Goauth {
 	st, err := store.Init(a.conf.DB)
 	if err != nil {
@@ -66,6 +72,7 @@ func (a *Goauth) SetupRoutes() *Goauth {
 		a.err = err
 		return a
 	}
+	a.middleware = middleware.NewMiddleware(st, a.conf, mailClient, wa)
 
 	routes := api.GetRoutes(a.conf, st, mailClient, wa)
 

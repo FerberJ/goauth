@@ -7,12 +7,11 @@ import (
 
 	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
-	"github.com/FerberJ/goauth/middleware"
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/store"
 )
 
-func HandleLogin(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	loginRequest, err := getValidBody[models.LoginRequest](r)
 	if err != nil {
@@ -20,13 +19,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
+	db := h.db
 
 	u, err := db.Queries.GetFromMail(ctx, loginRequest.Email)
 	if err != nil {
@@ -47,7 +40,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := getTokens(ctx, u.ID, app)
+	t, err := getTokens(ctx, u.ID, h)
 	if err != nil {
 		errormsg.GetTokenErr(w, err)
 		return
@@ -73,19 +66,13 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func HandleBeginLogin(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleBeginLogin(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	ctx := r.Context()
 	email := r.URL.Query().Get("email")
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	wa := app.Auth
+	db := h.db
+	wa := h.auth
 
 	u, err := db.Queries.GetFromMail(ctx, email)
 	if err != nil {
@@ -104,19 +91,13 @@ func HandleBeginLogin(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(credentials)
 }
 
-func HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	ctx := r.Context()
 	email := r.URL.Query().Get("email")
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	wa := app.Auth
+	db := h.db
+	wa := h.auth
 
 	u, err := db.Queries.GetFromMail(ctx, email)
 	if err != nil {
@@ -135,7 +116,7 @@ func HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := getTokens(ctx, u.ID, app)
+	t, err := getTokens(ctx, u.ID, h)
 	if err != nil {
 		errormsg.GetTokenErr(w, err)
 		return

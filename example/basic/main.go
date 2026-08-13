@@ -40,6 +40,12 @@ func main() {
 	})
 	r.Handle("/*", fs)
 
+	mw := a.Middleware()
+	l := r.With(mw.Authorization)
+	l.Get("/stuff", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	addr := ":1122"
 	log.Printf("listening on %s", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {

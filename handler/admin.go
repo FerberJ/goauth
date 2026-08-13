@@ -7,7 +7,6 @@ import (
 
 	errormsg "github.com/FerberJ/goauth/error_msg"
 	"github.com/FerberJ/goauth/mail"
-	"github.com/FerberJ/goauth/middleware"
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/service"
 	"github.com/FerberJ/goauth/store"
@@ -15,13 +14,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func HandleListUsers(w http.ResponseWriter, r *http.Request) {
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
+func (h Handler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
+	var err error
 	limitStr := r.URL.Query().Get("limit")
 	limit := -1
 	if limitStr != "" {
@@ -39,7 +33,7 @@ func HandleListUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	db := app.DB
+	db := h.db
 
 	users, err := db.Queries.GetUsers(r.Context(), gen.GetUsersParams{
 		Offset: int64(offset),
@@ -70,16 +64,10 @@ func HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func HandleGetUsers(w http.ResponseWriter, r *http.Request) {
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
+func (h Handler) HandleGetUsers(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	db := app.DB
+	db := h.db
 
 	user, err := db.Queries.GetUser(r.Context(), id)
 	if err != nil {
@@ -103,15 +91,11 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func HandleUserUpdate(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleUserUpdate(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-	db := app.DB
-	cfg := app.Config
+
+	db := h.db
+	cfg := h.config
 
 	u := service.NewUser(db, cfg)
 
@@ -131,21 +115,17 @@ func HandleUserUpdate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func HandleUserDelete(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleUserDelete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-	db := app.DB
-	cfg := app.Config
+
+	db := h.db
+	cfg := h.config
 
 	u := service.NewUser(db, cfg)
 
 	id := chi.URLParam(r, "id")
 
-	err = u.Delete(ctx, id)
+	err := u.Delete(ctx, id)
 	if err != nil {
 		errormsg.UpdateErr(w, err)
 		return
@@ -154,7 +134,7 @@ func HandleUserDelete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	signupRequest, err := getValidBody[models.SignupRequest](r)
 	if err != nil {
@@ -162,14 +142,8 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
-	cfg := app.Config
+	db := h.db
+	cfg := h.config
 	u := service.NewUser(db, cfg)
 	_, _, err = u.Create(ctx, signupRequest, false)
 	if err != nil {
@@ -181,16 +155,12 @@ func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func HandleUserVerify(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleUserVerify(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-	db := app.DB
-	cfg := app.Config
-	smtp := app.SMTP
+
+	db := h.db
+	cfg := h.config
+	smtp := h.smtp
 
 	u := service.NewUser(db, cfg)
 

@@ -7,10 +7,9 @@ import (
 
 	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
-	"github.com/FerberJ/goauth/middleware"
 )
 
-func HandleRefresh(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	c, err := r.Cookie("refresh")
 	if err != nil {
@@ -18,13 +17,7 @@ func HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
+	db := h.db
 
 	hashRefresh := encryption.HashToken(c.Value)
 	refresh, err := db.Queries.GetRefresh(ctx, hashRefresh)
@@ -49,7 +42,7 @@ func HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := getTokens(ctx, refresh.UserID, app)
+	t, err := getTokens(ctx, refresh.UserID, h)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return

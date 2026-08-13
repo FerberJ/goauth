@@ -5,10 +5,9 @@ import (
 
 	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
-	"github.com/FerberJ/goauth/middleware"
 )
 
-func HandleLogout(w http.ResponseWriter, r *http.Request) {
+func (h Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	c, err := r.Cookie("refresh")
 	if err != nil {
@@ -16,13 +15,7 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app, err := middleware.GetAppContext(r.Context())
-	if err != nil {
-		errormsg.AppContextErr(w, err)
-		return
-	}
-
-	db := app.DB
+	db := h.db
 
 	hashRefresh := encryption.HashToken(c.Value)
 	refresh, err := db.Queries.GetRefresh(ctx, hashRefresh)
