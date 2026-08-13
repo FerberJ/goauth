@@ -15,12 +15,7 @@ import (
 )
 
 const (
-	dbCtxKey     = "dbCtxKey"
-	configCtxKey = "configCtxKey"
-	smtpCtxKey   = "smtpCtxKey"
-	claimCtxKey  = "claimCtxKey"
-	authCtxKey   = "authCtxKey"
-	appCtxKey    = "appCtxKey"
+	claimCtxKey = "claimCtxKey"
 )
 
 type Middleware struct {
