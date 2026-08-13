@@ -48,6 +48,8 @@ func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido b
 		Mail:         signup.Email,
 		PasswordHash: store.StringToNullString(passwordHash),
 		Credentials:  json.RawMessage([]byte("[]")),
+		Firstname:    store.StringToNullString(signup.Firstname),
+		Lastname:     store.StringToNullString(signup.Lastname),
 	}
 	user, err := u.db.Queries.CreateUser(ctx, genUser)
 	if err != nil {
@@ -61,6 +63,16 @@ func (u *User) Create(ctx context.Context, signup models.SignupRequest, isFido b
 	}
 
 	return token, user.ID, nil
+}
+
+func (u *User) CreateVerifyToken(ctx context.Context, id string) (string, error) {
+	v := NewVerification(u.db, u.config)
+	token, err := v.Create(ctx, id)
+	if err != nil {
+		return "", fmt.Errorf("verification token could not be created: %w", err)
+	}
+
+	return token, nil
 }
 
 func (u *User) Delete(ctx context.Context, id string) error {

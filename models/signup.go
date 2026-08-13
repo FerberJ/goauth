@@ -1,9 +1,11 @@
 package models
 
 type SignupRequest struct {
-	Username string `validate:"required"`
-	Email    string `validate:"required,email"`
-	Password string `validate:"required"`
+	Firstname string
+	Lastname  string
+	Username  string `validate:"required"`
+	Email     string `validate:"required,email"`
+	Password  string `validate:"required"`
 }
 
 func (t SignupRequest) Validate() error {

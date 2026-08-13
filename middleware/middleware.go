@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/FerberJ/goauth/config"
+	errormsg "github.com/FerberJ/goauth/error_msg"
 	"github.com/FerberJ/goauth/mail"
 	"github.com/FerberJ/goauth/service"
 	"github.com/FerberJ/goauth/store"
@@ -30,57 +31,6 @@ type AppContext struct {
 	SMTP   mail.MailClient
 	Auth   *webauthn.WebAuthn
 }
-
-/*
-func WithDB(db store.DB) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), dbCtxKey, db)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-func GetDB(ctx context.Context) (store.DB, error) {
-	store, ok := ctx.Value(dbCtxKey).(store.DB)
-	if !ok {
-		//
-	}
-
-	return store, nil
-}
-func WithConfig(conf config.Config) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), configCtxKey, conf)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-func GetConfig(ctx context.Context) (config.Config, error) {
-	conf, ok := ctx.Value(configCtxKey).(config.Config)
-	if !ok {
-		//
-	}
-
-	return conf, nil
-}
-func WithSMTP(mailClient smtp.MailClient) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), smtpCtxKey, mailClient)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
-}
-func GetSMTP(ctx context.Context) (smtp.MailClient, error) {
-	mailclient, ok := ctx.Value(smtpCtxKey).(smtp.MailClient)
-	if !ok {
-		//
-	}
-
-	return mailclient, nil
-}
-*/
 
 func WithAppContext(db store.DB, conf config.Config, mailClient mail.MailClient, webauth *webauthn.WebAuthn) func(http.Handler) http.Handler {
 	app := AppContext{
@@ -110,7 +60,7 @@ func Admin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		appContext, err := GetAppContext(r.Context())
 		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			errormsg.AppContextErr(w, err)
 			return
 		}
 

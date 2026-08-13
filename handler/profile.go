@@ -84,6 +84,31 @@ func HandleProfileUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func HandleProfileDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+	db := app.DB
+	cfg := app.Config
+
+	u := service.NewUser(db, cfg)
+
+	c, err := middleware.GetClaim(r.Context())
+	if err != nil {
+		errormsg.ClaimErr(w, err)
+		return
+	}
+
+	err = u.Delete(ctx, c.UserID)
+	if err != nil {
+		errormsg.UpdateErr(w, err)
+		return
+	}
+}
+
 func HandleBeginRegister(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

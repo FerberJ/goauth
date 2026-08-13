@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/mail"
 	"github.com/FerberJ/goauth/middleware"
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/service"
@@ -126,4 +127,97 @@ func HandleUserUpdate(w http.ResponseWriter, r *http.Request) {
 		errormsg.UpdateErr(w, err)
 		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func HandleUserDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+	db := app.DB
+	cfg := app.Config
+
+	u := service.NewUser(db, cfg)
+
+	id := chi.URLParam(r, "id")
+
+	err = u.Delete(ctx, id)
+	if err != nil {
+		errormsg.UpdateErr(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func HandleCreateUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	signupRequest, err := getValidBody[models.SignupRequest](r)
+	if err != nil {
+		errormsg.DecodeErr(w, err)
+		return
+	}
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	cfg := app.Config
+	u := service.NewUser(db, cfg)
+	_, _, err = u.Create(ctx, signupRequest, false)
+	if err != nil {
+		errormsg.CreateErr(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+}
+
+func HandleUserVerify(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+	db := app.DB
+	cfg := app.Config
+	smtp := app.SMTP
+
+	u := service.NewUser(db, cfg)
+
+	id := chi.URLParam(r, "id")
+
+	user, err := u.Get(ctx, id)
+	if err != nil {
+		errormsg.GetEntryErr(w, err)
+		return
+	}
+
+	token, err := u.CreateVerifyToken(ctx, id)
+	if err != nil {
+		errormsg.GetTokenErr(w, err)
+		return
+	}
+
+	message, subject, err := cfg.SMTP.VerifyUserMail(cfg.Password.Endpoint, token)
+	if err != nil {
+		errormsg.JoinPathErr(w, err)
+		return
+	}
+	err = smtp.SendMail(cfg.SMTP.Username, user.Mail, message, subject, mail.HTML)
+	if err != nil {
+		errormsg.SendMailErr(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
