@@ -18,29 +18,29 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	conn, err := sql.Open("sqlite3", "abcde.db")
+	conn, err := sql.Open("sqlite3", "auth.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// authM.WithAppContext().GetClaim()
-	a := goauth.New(conn).WithCustomVerifyUserMail(verifyUserMail).SetupRoutes()
-	if a.Err() != nil {
-		log.Fatal(a.Err())
+	auth := goauth.New(conn).WithCustomVerifyUserMail(verifyUserMail).SetupRoutes()
+	if auth.Err() != nil {
+		log.Fatal(auth.Err())
 	}
 
 	if err := conn.Ping(); err != nil {
 		log.Fatal(err)
 	}
 
-	r.Mount("/auth", a.Router())
+	r.Mount("/auth", auth.Router())
 	fs := http.FileServer(http.Dir("./static"))
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)
 	})
 	r.Handle("/*", fs)
 
-	l := r.With(a.Authorization)
+	l := r.With(auth.Authorization)
 	l.Get("/stuff", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})

@@ -68,6 +68,7 @@ func (db DB) migrate() error {
 	if err != nil {
 		return &MigrateError{Op: "set dialect", Err: err}
 	}
+	goose.SetTableName("goose_db_auth_version")
 
 	err = goose.Up(db.DB, "migrations")
 	if err != nil {

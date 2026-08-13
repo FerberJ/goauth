@@ -53,7 +53,7 @@ func (h Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		Value:    t.JWT,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -61,7 +61,7 @@ func (h Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		Value:    t.Refresh,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
 

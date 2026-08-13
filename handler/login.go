@@ -51,7 +51,7 @@ func (h Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    t.JWT,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -59,7 +59,7 @@ func (h Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    t.Refresh,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
 
@@ -127,7 +127,7 @@ func (h Handler) HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    t.JWT,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -135,7 +135,7 @@ func (h Handler) HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    t.Refresh,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false,
+		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
 
