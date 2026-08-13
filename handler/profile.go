@@ -4,22 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"time"
 
 	"net/http"
 
-	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
 	"github.com/FerberJ/goauth/middleware"
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/service"
-	"github.com/FerberJ/goauth/store"
-	"github.com/FerberJ/goauth/store/gen"
 	"github.com/FerberJ/goauth/token"
 )
 
 func (h Handler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 	db := h.db
+	cfg := h.config
 
 	c, err := middleware.GetClaim(r.Context())
 	if err != nil {
@@ -27,22 +24,14 @@ func (h Handler) HandleProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := db.Queries.GetUser(r.Context(), c.UserID)
+	u := service.NewUser(db, cfg)
+	user, err := u.Get(r.Context(), c.UserID)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
 	}
 
-	u := models.User{
-		ID:        user.ID,
-		Username:  store.NullStringToString(user.Username),
-		Firstname: store.NullStringToString(user.Firstname),
-		Lastname:  store.NullStringToString(user.Lastname),
-		Mail:      user.Mail,
-		Admin:     user.Admin,
-	}
-
-	payload, err := json.Marshal(u)
+	payload, err := json.Marshal(user)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(payload)
@@ -140,24 +129,26 @@ func (h Handler) HandleFinishRegister(w http.ResponseWriter, r *http.Request) {
 	wa := h.auth
 	cfg := h.config
 
-	userService := service.NewUser(db, cfg)
+	u := service.NewUser(db, cfg)
 
-	u, err := userService.Get(ctx, token.UserID)
+	user, err := u.Get(ctx, token.UserID)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
 	}
 
-	err = u.FinishRegistration(db, wa, r)
+	err = user.FinishRegistration(db, wa, r)
 
-	data, err := json.Marshal(u.Credentials)
-	//db.Queries.up
-	err = db.Queries.UserUpdateSignupCredentials(ctx, gen.UserUpdateSignupCredentialsParams{
-		Credentials: json.RawMessage(data),
-		ID:          u.ID,
-		Mail:        u.Mail,
-	})
-
+	err = u.UpdateSignupCredentials(ctx, user.Credentials, user.ID, user.Mail)
+	/*
+		data, err := json.Marshal(u.Credentials)
+		//db.Queries.up
+		err = db.Queries.UserUpdateSignupCredentials(ctx, gen.UserUpdateSignupCredentialsParams{
+			Credentials: json.RawMessage(data),
+			ID:          u.ID,
+			Mail:        u.Mail,
+		})
+	*/
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -170,6 +161,7 @@ func getPasswordToken(ctx context.Context, userID string, h Handler) (string, er
 	return p.Create(ctx, userID)
 }
 
+/*
 func getVerification(ctx context.Context, userID string, h Handler) (string, error) {
 	cfg := h.config
 	db := h.db
@@ -178,29 +170,20 @@ func getVerification(ctx context.Context, userID string, h Handler) (string, err
 
 	return v.Create(ctx, userID)
 }
+*/
 
 func getTokens(ctx context.Context, userID string, h Handler) (token.Tokens, error) {
 	cfg := h.config
 	db := h.db
+
+	re := service.NewRefresh(db, cfg)
 
 	t, err := token.CreateTokens(userID, cfg.Secret)
 	if err != nil {
 		return t, err
 	}
 
-	newID, err := db.CreateID(ctx, store.Refresh)
-	if err != nil {
-		return t, err
-	}
-
-	hashRefresh := encryption.HashToken(t.Refresh)
-	_, err = db.Queries.CreateRefresh(ctx, gen.CreateRefreshParams{
-		ID:        newID,
-		TokenID:   hashRefresh,
-		UserID:    userID,
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(cfg.Refresh.TokenTTL).Unix(),
-	})
+	_, err = re.Create(ctx, userID)
 	if err != nil {
 		return t, err
 	}

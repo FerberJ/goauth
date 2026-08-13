@@ -5,6 +5,7 @@ import (
 
 	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/service"
 )
 
 func (h Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
@@ -16,15 +17,18 @@ func (h Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db := h.db
+	cfg := h.config
+
+	re := service.NewRefresh(db, cfg)
 
 	hashRefresh := encryption.HashToken(c.Value)
-	refresh, err := db.Queries.GetRefresh(ctx, hashRefresh)
+	refresh, err := re.Get(ctx, hashRefresh)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
 	}
 
-	err = db.Queries.DeleteRefresh(ctx, refresh.ID)
+	err = re.Delete(ctx, refresh.ID)
 	if err != nil {
 		errormsg.DeleteErr(w, err)
 		return

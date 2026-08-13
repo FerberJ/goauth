@@ -8,7 +8,7 @@ import (
 	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
 	"github.com/FerberJ/goauth/models"
-	"github.com/FerberJ/goauth/store"
+	"github.com/FerberJ/goauth/service"
 )
 
 func (h Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -20,17 +20,16 @@ func (h Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db := h.db
+	cfg := h.config
 
-	u, err := db.Queries.GetFromMail(ctx, loginRequest.Email)
+	u := service.NewUser(db, cfg)
+	user, err := u.GetFromMail(ctx, loginRequest.Email)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
 	}
 
-	if !u.PasswordHash.Valid {
-		errormsg.ValidatePasswordErr(w, fmt.Errorf("password is not valid"))
-	}
-	valid, err := encryption.CompareHash(store.NullStringToString(u.PasswordHash), loginRequest.Password)
+	valid, err := encryption.CompareHash(user.Password, loginRequest.Password)
 	if err != nil {
 		errormsg.ValidatePasswordErr(w, err)
 		return
@@ -40,7 +39,7 @@ func (h Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := getTokens(ctx, u.ID, h)
+	t, err := getTokens(ctx, user.ID, h)
 	if err != nil {
 		errormsg.GetTokenErr(w, err)
 		return
@@ -73,13 +72,11 @@ func (h Handler) HandleBeginLogin(w http.ResponseWriter, r *http.Request) {
 
 	db := h.db
 	wa := h.auth
+	cfg := h.config
 
-	u, err := db.Queries.GetFromMail(ctx, email)
-	if err != nil {
-		errormsg.GetEntryErr(w, err)
-		return
-	}
-	user, err = models.GetUser(u)
+	u := service.NewUser(db, cfg)
+
+	user, err := u.GetFromMail(ctx, email)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
@@ -98,13 +95,10 @@ func (h Handler) HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 
 	db := h.db
 	wa := h.auth
+	cfg := h.config
 
-	u, err := db.Queries.GetFromMail(ctx, email)
-	if err != nil {
-		errormsg.GetEntryErr(w, err)
-		return
-	}
-	user, err = models.GetUser(u)
+	u := service.NewUser(db, cfg)
+	user, err := u.GetFromMail(ctx, email)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
@@ -116,7 +110,7 @@ func (h Handler) HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := getTokens(ctx, u.ID, h)
+	t, err := getTokens(ctx, user.ID, h)
 	if err != nil {
 		errormsg.GetTokenErr(w, err)
 		return

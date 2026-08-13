@@ -27,7 +27,7 @@ func (e *MigrateError) Unwrap() error {
 }
 
 type DB struct {
-	DB      *sql.DB
+	db      *sql.DB
 	Queries *gen.Queries
 	Session Session
 }
@@ -38,7 +38,7 @@ type DB struct {
 // and queries
 func Init(s *sql.DB) (DB, error) {
 	db := DB{
-		DB:      s,
+		db:      s,
 		Queries: gen.New(s),
 	}
 
@@ -70,7 +70,7 @@ func (db DB) migrate() error {
 	}
 	goose.SetTableName("goose_db_auth_version")
 
-	err = goose.Up(db.DB, "migrations")
+	err = goose.Up(db.db, "migrations")
 	if err != nil {
 		return &MigrateError{Op: "up", Err: err}
 	}

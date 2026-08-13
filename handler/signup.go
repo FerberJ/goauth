@@ -11,7 +11,6 @@ import (
 	"github.com/FerberJ/goauth/mail"
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/service"
-	"github.com/FerberJ/goauth/store/gen"
 
 	"github.com/google/uuid"
 )
@@ -101,13 +100,18 @@ func (h Handler) HandleFinishSignup(w http.ResponseWriter, r *http.Request) {
 	user := models.User{Mail: email}
 	err := user.FinishRegistration(db, wa, r)
 
-	data, err := json.Marshal(user.Credentials)
-	//db.Queries.up
-	err = db.Queries.UserUpdateSignupCredentials(ctx, gen.UserUpdateSignupCredentialsParams{
-		Credentials: json.RawMessage(data),
-		ID:          user.ID,
-		Mail:        email,
-	})
+	u := service.NewUser(db, cfg)
+	err = u.UpdateSignupCredentials(ctx, user.Credentials, user.ID, user.Mail)
+	/*
+		data, err := json.Marshal(user.Credentials)
+			//db.Queries.up
+			err = db.Queries.UserUpdateSignupCredentials(ctx, gen.UserUpdateSignupCredentialsParams{
+				Credentials: json.RawMessage(data),
+				ID:          user.ID,
+				Mail:        email,
+			})
+
+	*/
 
 	v := service.NewVerification(db, cfg)
 	token, err := v.Create(ctx, user.ID)

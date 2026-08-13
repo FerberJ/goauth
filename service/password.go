@@ -9,6 +9,7 @@ import (
 	"github.com/FerberJ/goauth/encryption"
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/store"
+
 	"github.com/FerberJ/goauth/store/gen"
 )
 

@@ -25,9 +25,10 @@ func (h Handler) HandleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	cfg := h.config
 	smtp := h.smtp
 
-	u, err := db.Queries.GetFromMail(ctx, resetRequest.Email)
+	u := service.NewUser(db, cfg)
+	user, err := u.GetFromMail(ctx, resetRequest.Email)
 
-	t, err := getPasswordToken(ctx, u.ID, h)
+	t, err := getPasswordToken(ctx, user.ID, h)
 
 	// verifyURL, err := url.JoinPath(cfg.Password.Endpoint, "password", "reset", t)
 	message, subject, err := cfg.SMTP.ResetPasswordMail(cfg.Password.Endpoint, t)

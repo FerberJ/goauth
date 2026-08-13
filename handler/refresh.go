@@ -7,6 +7,7 @@ import (
 
 	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
+	"github.com/FerberJ/goauth/service"
 )
 
 func (h Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
@@ -18,13 +19,12 @@ func (h Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db := h.db
+	cfg := h.config
+
+	re := service.NewRefresh(db, cfg)
 
 	hashRefresh := encryption.HashToken(c.Value)
-	refresh, err := db.Queries.GetRefresh(ctx, hashRefresh)
-	if err != nil {
-		errormsg.GetEntryErr(w, err)
-		return
-	}
+	refresh, err := re.Get(ctx, hashRefresh)
 
 	if refresh.ExpiresAt < time.Now().Unix() {
 		errormsg.ExpireErr(w, fmt.Errorf("refresh token has expired"))
@@ -36,7 +36,7 @@ func (h Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.Queries.RefreshRevoke(ctx, refresh.ID)
+	err = re.Revoke(ctx, refresh.ID)
 	if err != nil {
 		errormsg.UpdateErr(w, err)
 		return

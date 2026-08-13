@@ -62,6 +62,15 @@ func (v *Refresh) Create(ctx context.Context, userID string) (string, error) {
 	return token, nil
 }
 
+func (v *Refresh) Delete(ctx context.Context, id string) error {
+	err := v.db.Queries.DeleteRefresh(ctx, id)
+	if err != nil {
+		return fmt.Errorf("could not delete refresh token: %w", err)
+	}
+
+	return nil
+}
+
 func (v *Refresh) Get(ctx context.Context, id string) (models.Refresh, error) {
 	var refresh models.Refresh
 	authV, err := v.db.Queries.GetRefresh(ctx, id)

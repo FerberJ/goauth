@@ -10,6 +10,7 @@ import (
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/store"
 	"github.com/FerberJ/goauth/store/gen"
+	"github.com/go-webauthn/webauthn/webauthn"
 )
 
 type User struct {
@@ -214,4 +215,43 @@ func (u *User) GetProfileImage(ctx context.Context, id string) ([]byte, error) {
 	}
 
 	return img, nil
+}
+
+func (u *User) List(ctx context.Context, limit, offset int) ([]models.User, error) {
+	dbUsers, err := u.db.Queries.GetUsers(ctx, gen.GetUsersParams{
+		Offset: int64(offset),
+		Limit:  int64(limit),
+	})
+	if err != nil {
+		return []models.User{}, fmt.Errorf("could not get list of users: %w", err)
+	}
+
+	users := make([]models.User, 0, len(dbUsers))
+	for _, user := range dbUsers {
+		us, err := models.GetUser(user)
+		if err != nil {
+			return users, fmt.Errorf("AuthUser can not be parsed to models.User: %w", err)
+		}
+		users = append(users, us)
+	}
+
+	return users, nil
+}
+
+func (u *User) UpdateSignupCredentials(ctx context.Context, credentials []webauthn.Credential, id, mail string) error {
+	data, err := json.Marshal(credentials)
+	if err != nil {
+		return fmt.Errorf("could not marshal credentials: %w", err)
+	}
+
+	err = u.db.Queries.UserUpdateSignupCredentials(ctx, gen.UserUpdateSignupCredentialsParams{
+		Credentials: json.RawMessage(data),
+		ID:          id,
+		Mail:        mail,
+	})
+	if err != nil {
+		return fmt.Errorf("error when updating signup credentials: %w", err)
+	}
+
+	return nil
 }

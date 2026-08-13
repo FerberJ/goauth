@@ -54,6 +54,8 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 	a.Post("/admin/users/{id}/verify", h.HandleUserVerify)
 	a.Put("/admin/users/{id}", h.HandleUserUpdate)
 	a.Delete("/admin/users/{id}", h.HandleUserDelete)
+	a.Put("/admin/users/{id}/image", h.HandleSetUserImage)
+	a.Get("/admin/users/{id}/image", h.HandleGetUserImage)
 
 	return r
 }

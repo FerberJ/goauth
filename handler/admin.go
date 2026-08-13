@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -9,12 +10,12 @@ import (
 	"github.com/FerberJ/goauth/mail"
 	"github.com/FerberJ/goauth/models"
 	"github.com/FerberJ/goauth/service"
-	"github.com/FerberJ/goauth/store"
-	"github.com/FerberJ/goauth/store/gen"
 	"github.com/go-chi/chi/v5"
 )
 
 func (h Handler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var err error
 	limitStr := r.URL.Query().Get("limit")
 	limit := -1
@@ -34,30 +35,17 @@ func (h Handler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db := h.db
+	cfg := h.config
 
-	users, err := db.Queries.GetUsers(r.Context(), gen.GetUsersParams{
-		Offset: int64(offset),
-		Limit:  int64(limit),
-	})
+	u := service.NewUser(db, cfg)
+
+	users, err := u.List(ctx, limit, offset)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
 	}
 
-	uList := make([]models.User, 0, len(users))
-	for _, user := range users {
-		u := models.User{
-			ID:        user.ID,
-			Username:  store.NullStringToString(user.Username),
-			Firstname: store.NullStringToString(user.Firstname),
-			Lastname:  store.NullStringToString(user.Lastname),
-			Mail:      user.Mail,
-			Admin:     user.Admin,
-		}
-		uList = append(uList, u)
-	}
-
-	payload, err := json.Marshal(uList)
+	payload, err := json.Marshal(users)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(payload)
@@ -65,26 +53,21 @@ func (h Handler) HandleListUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h Handler) HandleGetUsers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id := chi.URLParam(r, "id")
 
 	db := h.db
+	cfg := h.config
 
-	user, err := db.Queries.GetUser(r.Context(), id)
+	u := service.NewUser(db, cfg)
+
+	user, err := u.Get(ctx, id)
 	if err != nil {
 		errormsg.GetEntryErr(w, err)
 		return
 	}
 
-	u := models.User{
-		ID:        user.ID,
-		Username:  store.NullStringToString(user.Username),
-		Firstname: store.NullStringToString(user.Firstname),
-		Lastname:  store.NullStringToString(user.Lastname),
-		Mail:      user.Mail,
-		Admin:     user.Admin,
-	}
-
-	payload, err := json.Marshal(u)
+	payload, err := json.Marshal(user)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(payload)
@@ -190,4 +173,68 @@ func (h Handler) HandleUserVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h Handler) HandleSetUserImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	db := h.db
+	cfg := h.config
+
+	id := chi.URLParam(r, "id")
+
+	// Limit total request size (e.g. 5MB) to prevent abuse
+	r.Body = http.MaxBytesReader(w, r.Body, 5<<20) // 5MB
+
+	// Parse the multipart form; the argument is the max memory used
+	// before falling back to temp files on disk
+	if err := r.ParseMultipartForm(5 << 20); err != nil {
+		http.Error(w, "file too large or invalid form", http.StatusBadRequest)
+		return
+	}
+
+	// "avatar" must match the form field name the client sends
+	file, _, err := r.FormFile("avatar")
+	if err != nil {
+		http.Error(w, "missing avatar file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Read the file into memory
+	imgData, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "failed to read file", http.StatusInternalServerError)
+		return
+	}
+
+	u := service.NewUser(db, cfg)
+	err = u.SetProfileImage(ctx, id, imgData)
+	if err != nil {
+		http.Error(w, "failed to save file", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h Handler) HandleGetUserImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	db := h.db
+	cfg := h.config
+
+	id := chi.URLParam(r, "id")
+
+	u := service.NewUser(db, cfg)
+	img, err := u.GetProfileImage(ctx, id)
+	if err != nil {
+		http.Error(w, "failed to get file", http.StatusBadRequest)
+		return
+	}
+
+	mime := http.DetectContentType(img)
+
+	w.Header().Set("Content-Type", mime)
+	w.Write(img)
 }
