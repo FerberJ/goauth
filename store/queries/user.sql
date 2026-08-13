@@ -59,3 +59,13 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 -- name: CountUsers :one
 SELECT COUNT(*) FROM auth_users
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: UpdateUserImage :exec
+UPDATE auth_users
+SET image = ?
+WHERE id = ?;
+
+-- name: GetUserImage :one
+SELECT image
+FROM auth_users
+WHERE id = ?;

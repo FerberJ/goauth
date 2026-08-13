@@ -35,13 +35,15 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 
 	m := r.With(middleware.Authorization)
 
-	m.Post("profile/password/change", handler.HandleChangePassword)
+	m.Post("/profile/password/change", handler.HandleChangePassword)
 
 	m.Get("/profile/fido/begin", handler.HandleBeginRegister)
 	m.Post("/profile/fido/finish", handler.HandleFinishRegister)
 	m.Get("/profile", handler.HandleProfile)
 	m.Put("/profile", handler.HandleProfileUpdate)
 	m.Delete("/profile", handler.HandleProfileDelete)
+	m.Put("/profile/image", handler.HandleSetProfileImage)
+	m.Get("/profile/image", handler.HandleGetProfileImage)
 
 	a := m.With(middleware.Admin)
 

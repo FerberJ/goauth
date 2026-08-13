@@ -34,7 +34,7 @@ INSERT INTO auth_users (
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, FALSE
 )
-RETURNING id, username, firstname, lastname, password_hash, mail, verified, credentials, admin
+RETURNING id, username, firstname, lastname, password_hash, mail, verified, credentials, admin, image
 `
 
 type CreateUserParams struct {
@@ -68,6 +68,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (AuthUse
 		&i.Verified,
 		&i.Credentials,
 		&i.Admin,
+		&i.Image,
 	)
 	return i, err
 }
@@ -83,7 +84,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id string) error {
 }
 
 const getFromMail = `-- name: GetFromMail :one
-SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin FROM auth_users
+SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin, image FROM auth_users
 WHERE mail = ? LIMIT 1
 `
 
@@ -100,12 +101,13 @@ func (q *Queries) GetFromMail(ctx context.Context, mail string) (AuthUser, error
 		&i.Verified,
 		&i.Credentials,
 		&i.Admin,
+		&i.Image,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin FROM auth_users
+SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin, image FROM auth_users
 WHERE id = ? LIMIT 1
 `
 
@@ -122,12 +124,26 @@ func (q *Queries) GetUser(ctx context.Context, id string) (AuthUser, error) {
 		&i.Verified,
 		&i.Credentials,
 		&i.Admin,
+		&i.Image,
 	)
 	return i, err
 }
 
+const getUserImage = `-- name: GetUserImage :one
+SELECT image
+FROM auth_users
+WHERE id = ?
+`
+
+func (q *Queries) GetUserImage(ctx context.Context, id string) ([]byte, error) {
+	row := q.db.QueryRowContext(ctx, getUserImage, id)
+	var image []byte
+	err := row.Scan(&image)
+	return image, err
+}
+
 const getUsers = `-- name: GetUsers :many
-SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin FROM auth_users
+SELECT id, username, firstname, lastname, password_hash, mail, verified, credentials, admin, image FROM auth_users
 ORDER BY id
 LIMIT ?2 OFFSET ?1
 `
@@ -156,6 +172,7 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]AuthUser,
 			&i.Verified,
 			&i.Credentials,
 			&i.Admin,
+			&i.Image,
 		); err != nil {
 			return nil, err
 		}
@@ -196,6 +213,22 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Mail,
 		arg.ID,
 	)
+	return err
+}
+
+const updateUserImage = `-- name: UpdateUserImage :exec
+UPDATE auth_users
+SET image = ?
+WHERE id = ?
+`
+
+type UpdateUserImageParams struct {
+	Image []byte
+	ID    string
+}
+
+func (q *Queries) UpdateUserImage(ctx context.Context, arg UpdateUserImageParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserImage, arg.Image, arg.ID)
 	return err
 }
 

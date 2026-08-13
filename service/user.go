@@ -194,3 +194,24 @@ func (u *User) Verify(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (u *User) SetProfileImage(ctx context.Context, id string, imgData []byte) error {
+	err := u.db.Queries.UpdateUserImage(ctx, gen.UpdateUserImageParams{
+		Image: imgData,
+		ID:    id,
+	})
+	if err != nil {
+		return fmt.Errorf("could not save profile image: %w", err)
+	}
+
+	return nil
+}
+
+func (u *User) GetProfileImage(ctx context.Context, id string) ([]byte, error) {
+	img, err := u.db.Queries.GetUserImage(ctx, id)
+	if err != nil {
+		return []byte{}, fmt.Errorf("could not get the profile image: %w", err)
+	}
+
+	return img, nil
+}

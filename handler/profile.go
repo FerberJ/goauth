@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"time"
 
 	"net/http"
@@ -231,4 +232,88 @@ func getTokens(ctx context.Context, userID string, app middleware.AppContext) (t
 	}
 
 	return t, nil
+}
+
+func HandleSetProfileImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	cfg := app.Config
+
+	c, err := middleware.GetClaim(r.Context())
+	if err != nil {
+		errormsg.ClaimErr(w, err)
+		return
+	}
+
+	// Limit total request size (e.g. 5MB) to prevent abuse
+	r.Body = http.MaxBytesReader(w, r.Body, 5<<20) // 5MB
+
+	// Parse the multipart form; the argument is the max memory used
+	// before falling back to temp files on disk
+	if err := r.ParseMultipartForm(5 << 20); err != nil {
+		http.Error(w, "file too large or invalid form", http.StatusBadRequest)
+		return
+	}
+
+	// "avatar" must match the form field name the client sends
+	file, _, err := r.FormFile("avatar")
+	if err != nil {
+		http.Error(w, "missing avatar file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Read the file into memory
+	imgData, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "failed to read file", http.StatusInternalServerError)
+		return
+	}
+
+	u := service.NewUser(db, cfg)
+	err = u.SetProfileImage(ctx, c.UserID, imgData)
+	if err != nil {
+		http.Error(w, "failed to save file", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func HandleGetProfileImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	app, err := middleware.GetAppContext(r.Context())
+	if err != nil {
+		errormsg.AppContextErr(w, err)
+		return
+	}
+
+	db := app.DB
+	cfg := app.Config
+
+	c, err := middleware.GetClaim(r.Context())
+	if err != nil {
+		errormsg.ClaimErr(w, err)
+		return
+	}
+
+	u := service.NewUser(db, cfg)
+	img, err := u.GetProfileImage(ctx, c.UserID)
+	if err != nil {
+		http.Error(w, "failed to get file", http.StatusBadRequest)
+		return
+	}
+
+	mime := http.DetectContentType(img)
+
+	w.Header().Set("Content-Type", mime)
+	w.Write(img)
 }

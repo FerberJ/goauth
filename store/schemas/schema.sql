@@ -7,7 +7,8 @@ CREATE TABLE auth_users (
     mail TEXT NOT NULL UNIQUE,
     verified BOOLEAN NOT NULL DEFAULT FALSE,
     credentials TEXT NOT NULL DEFAULT '[]',
-    admin BOOLEAN NOT NULL DEFAULT FALSE
+    admin BOOLEAN NOT NULL DEFAULT FALSE,
+    image BLOB
 );
 
 CREATE TABLE auth_verification (

@@ -37,6 +37,7 @@ type AuthUser struct {
 	Verified     bool
 	Credentials  json.RawMessage
 	Admin        bool
+	Image        []byte
 }
 
 type AuthVerification struct {
