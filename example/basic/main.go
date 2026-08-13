@@ -40,8 +40,7 @@ func main() {
 	})
 	r.Handle("/*", fs)
 
-	mw := a.Middleware()
-	l := r.With(mw.Authorization)
+	l := r.With(a.Authorization)
 	l.Get("/stuff", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})

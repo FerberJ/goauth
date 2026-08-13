@@ -2,6 +2,7 @@ package goauth
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/FerberJ/goauth/api"
 	"github.com/FerberJ/goauth/auth"
@@ -14,55 +15,60 @@ import (
 )
 
 type Goauth struct {
-	router     chi.Router
-	conf       config.Config
-	err        error
-	middleware middleware.Middleware
+	r   chi.Router
+	cfg config.Config
+	err error
+	mw  middleware.Middleware
 }
 
 func New(db *sql.DB) *Goauth {
-	goauth := new(Goauth)
+	a := new(Goauth)
 
-	conf, err := config.GetConf(db)
+	cfg, err := config.GetConf(db)
 
 	//
-	conf.SMTP.ResetPasswordMail = mail.ResetPasswordMail
-	conf.SMTP.VerifyUserMail = mail.VerifyUserMail
+	cfg.SMTP.ResetPasswordMail = mail.ResetPasswordMail
+	cfg.SMTP.VerifyUserMail = mail.VerifyUserMail
 
-	goauth.conf = conf
-	goauth.err = err
+	a.cfg = cfg
+	a.err = err
 
-	return goauth
+	return a
 }
 
 func (a *Goauth) Err() error {
 	return a.err
 }
 func (a *Goauth) Router() chi.Router {
-	return a.router
+	return a.r
 }
 
 func (a *Goauth) WithCustomResetPasswordMail(m func(cfgEndpoint string, token string) (message string, sunject string, err error)) *Goauth {
-	a.conf.SMTP.ResetPasswordMail = m
+	a.cfg.SMTP.ResetPasswordMail = m
 	return a
 }
 
 func (a *Goauth) WithCustomVerifyUserMail(m func(cfgEndpoint string, token string) (message string, sunject string, err error)) *Goauth {
-	a.conf.SMTP.VerifyUserMail = m
+	a.cfg.SMTP.VerifyUserMail = m
 	return a
 }
 
-func (a *Goauth) Middleware() middleware.Middleware {
-	return a.middleware
+// func(next http.Handler) http.Handler
+func (a *Goauth) Admin(next http.Handler) http.Handler {
+	return a.mw.Admin(next)
+}
+
+func (a *Goauth) Authorization(next http.Handler) http.Handler {
+	return a.mw.Authorization(next)
 }
 
 func (a *Goauth) SetupRoutes() *Goauth {
-	st, err := store.Init(a.conf.DB)
+	st, err := store.Init(a.cfg.DB)
 	if err != nil {
 		a.err = err
 		return a
 	}
-	mailClient, err := mail.Init(a.conf.SMTP)
+	mailClient, err := mail.Init(a.cfg.SMTP)
 	if err != nil {
 		a.err = err
 		return a
@@ -72,11 +78,11 @@ func (a *Goauth) SetupRoutes() *Goauth {
 		a.err = err
 		return a
 	}
-	a.middleware = middleware.NewMiddleware(st, a.conf, mailClient, wa)
+	a.mw = middleware.NewMiddleware(st, a.cfg, mailClient, wa)
 
-	routes := api.GetRoutes(a.conf, st, mailClient, wa)
+	routes := api.GetRoutes(a.cfg, st, mailClient, wa)
 
-	a.router = routes
+	a.r = routes
 
 	return a
 }
