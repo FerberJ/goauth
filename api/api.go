@@ -24,7 +24,7 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 	r.Get("/verify/{token}", h.HandleVerifyToken)
 
 	r.Post("/login", h.HandleLogin)
-	r.Get("/login/fido/begin", h.HandleBeginLogin)
+	r.Post("/login/fido/begin", h.HandleBeginLogin)
 	r.Post("/login/fido/finish", h.HandleFinishLogin)
 
 	r.Post("/logout", h.HandleLogout)
@@ -38,7 +38,7 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 
 	m.Post("/profile/password/change", h.HandleChangePassword)
 
-	m.Get("/profile/fido/begin", h.HandleBeginRegister)
+	m.Post("/profile/fido/begin", h.HandleBeginRegister)
 	m.Post("/profile/fido/finish", h.HandleFinishRegister)
 	m.Get("/profile", h.HandleProfile)
 	m.Put("/profile", h.HandleProfileUpdate)
