@@ -3,6 +3,7 @@ module github.com/FerberJ/goauth
 go 1.26.3
 
 require (
+	github.com/a-h/templ v0.3.1020
 	github.com/dgraph-io/badger/v4 v4.9.6
 	github.com/go-chi/chi/v5 v5.3.1
 	github.com/go-playground/validator/v10 v10.30.3
@@ -12,11 +13,13 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-sqlite3 v1.14.49
 	github.com/pressly/goose/v3 v3.27.3
+	github.com/templui/templui v1.13.0
 	github.com/wneessen/go-mail v0.8.1
 	golang.org/x/crypto v0.55.0
 )
 
 require (
+	github.com/Oudwins/tailwind-merge-go v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
