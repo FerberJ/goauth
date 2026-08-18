@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/FerberJ/goauth/config"
+	"github.com/FerberJ/goauth/frontend"
 	"github.com/FerberJ/goauth/frontend/assets"
 	"github.com/FerberJ/goauth/handler"
 	"github.com/FerberJ/goauth/mail"
@@ -23,6 +24,9 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 
 	mw := middleware.NewMiddleware(db, config, mc, wa)
 	h := handler.NewHandler(db, config, mc, wa)
+
+	f := frontend.Run(mw)
+	r.Mount("/_/", f)
 
 	r.Post("/signup", h.HandleSignup)
 	r.Post("/signup/fido/begin", h.HandleBeginSignup)

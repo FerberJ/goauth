@@ -3,6 +3,7 @@ module github.com/FerberJ/goauth
 go 1.26.3
 
 require (
+	github.com/Oudwins/tailwind-merge-go v0.2.3
 	github.com/a-h/templ v0.3.1020
 	github.com/dgraph-io/badger/v4 v4.9.6
 	github.com/go-chi/chi/v5 v5.3.1
@@ -19,7 +20,6 @@ require (
 )
 
 require (
-	github.com/Oudwins/tailwind-merge-go v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect

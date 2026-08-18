@@ -58,6 +58,43 @@ func (mw Middleware) Admin(next http.Handler) http.Handler {
 	})
 }
 
+func (mw Middleware) IsAuthorized(r *http.Request) bool {
+	cookie, err := r.Cookie("authorization")
+	if err != nil {
+		return false
+	}
+	_, err = token.VerifyToken(cookie.Value, mw.config.Secret)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func (mw Middleware) IsAdmin(r *http.Request) bool {
+	cookie, err := r.Cookie("authorization")
+	if err != nil {
+		return false
+	}
+	claim, err := token.VerifyToken(cookie.Value, mw.config.Secret)
+	if err != nil {
+		return false
+	}
+
+	userService := service.NewUser(mw.db, mw.config)
+
+	user, err := userService.Get(r.Context(), claim.UserID)
+	if err != nil {
+		return false
+	}
+
+	if !user.Admin {
+		return false
+	}
+
+	return true
+}
+
 func (mw Middleware) Authorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("authorization")

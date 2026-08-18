@@ -1,0 +1,17 @@
+{
+  "$schema": "https://shadcn-templ.com/schema/components.json",
+  "style": "base-luma",
+  "tailwind": {
+    "css": "frontend/css/globals.css",
+    "baseColor": "stone",
+    "cssVariables": true
+  },
+  "rtl": false,
+  "iconLibrary": "lucide",
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "aliases": {
+    "components": "github.com/FerberJ/goauth/frontend/components",
+    "utils": "github.com/FerberJ/goauth/frontend/utils"
+  }
+}
