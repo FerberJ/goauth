@@ -1,4 +1,4 @@
-package login
+package resetpwform
 
 import (
 
@@ -9,15 +9,15 @@ import (
 	"github.com/FerberJ/goauth/frontend/components/icon"
 )
 
-templ LoginForm() {
+templ ResetPW() {
 	<div class="flex flex-col gap-6">
 		@card.Card() {
 			@card.Header() {
 				@card.Title() {
-					Login to your account
+					Reset password
 				}
 				@card.Description() {
-					Enter your email below to login to your account
+					Enter your email below to reset password
 				}
 			}
 			@card.Content() {
@@ -35,29 +35,12 @@ templ LoginForm() {
 							})
 						}
 						@field.Field() {
-							<div class="flex items-center">
-								@field.Label(field.LabelProps{For: "password"}) {
-									Password
-								}
-								<a
-									href="#"
-									class="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-								>
-									Forgot your password?
-								</a>
-							</div>
-							@input.Input(input.Props{ID: "password", Type: "password", Required: true})
-						}
-						@field.Field() {
 							@button.Button(button.Props{Type: button.TypeSubmit}) {
-								Login
-							}
-							@button.Button(button.Props{Variant: button.VariantOutline, Type: button.TypeButton}) {
-                                @icon.KeyRound()
-								Login with Securitykey
+								@icon.Send()
+								Send reset email
 							}
 							@field.Description(field.DescriptionProps{Class: "text-center"}) {
-								Don't have an account? <a href="/auth/_/signup">Sign up</a>
+								Still remeber your password? <a href="/auth/_/">Sign in</a>
 							}
 						}
 					}

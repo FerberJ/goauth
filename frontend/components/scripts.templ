@@ -1,7 +1,9 @@
 package components
 
+import "github.com/FerberJ/goauth/frontend/middleware/pattern"
+
 // Scripts renders the one script tag that loads the component JS bundle.
 // Render it once in the layout <head>.
 templ Scripts() {
-	<script defer nonce={ templ.GetNonce(ctx) } src={ scriptsSrc() }></script>
+	<script defer nonce={ templ.GetNonce(ctx) } src={ scriptsSrc(pattern.GetPattern(ctx)) }></script>
 }

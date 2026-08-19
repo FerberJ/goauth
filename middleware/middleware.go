@@ -38,7 +38,7 @@ func (mw Middleware) Admin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claim, err := GetClaim(r.Context())
 		if err != nil {
-			http.Error(w, "cant get claim", http.StatusUnauthorized)
+			http.Error(w, "cant get claim", http.StatusForbidden)
 			return
 		}
 
@@ -51,7 +51,7 @@ func (mw Middleware) Admin(next http.Handler) http.Handler {
 		}
 
 		if !user.Admin {
-			http.Error(w, "user is not admin", http.StatusUnauthorized)
+			http.Error(w, "user is not admin", http.StatusForbidden)
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(r.Context()))

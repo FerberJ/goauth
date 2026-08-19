@@ -24,16 +24,20 @@ func main() {
 	}
 
 	// authM.WithAppContext().GetClaim()
-	auth := goauth.New(conn).WithCustomVerifyUserMail(verifyUserMail).SetupRoutes()
+	auth := goauth.New(conn).WithPattern("/auth").WithCustomVerifyUserMail(verifyUserMail)
 	if auth.Err() != nil {
 		log.Fatal(auth.Err())
+	}
+
+	err = auth.GetRoutes(r)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if err := conn.Ping(); err != nil {
 		log.Fatal(err)
 	}
 
-	r.Mount("/auth", auth.Router())
 	fs := http.FileServer(http.Dir("./static"))
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		fs.ServeHTTP(w, r)

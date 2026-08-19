@@ -1,6 +1,7 @@
 package layouts
 
 import "github.com/FerberJ/goauth/frontend/components"
+import "github.com/FerberJ/goauth/frontend/middleware/pattern"
 
 
 
@@ -13,7 +14,7 @@ templ Base(title string) {
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title }</title>
-			<link rel="stylesheet" href="/auth/_/assets/css/styles.css"/>
+			<link rel="stylesheet" href={ getStyleCss(pattern.GetPattern(ctx)) }/>
 			<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
 			@components.Scripts()
 		</head>
@@ -21,4 +22,8 @@ templ Base(title string) {
 			{ children... }
 		</body>
 	</html>
+}
+
+func getStyleCss(pattern string) string {
+	return pattern + "/_/assets/css/styles.css"
 }

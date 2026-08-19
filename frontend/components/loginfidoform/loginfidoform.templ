@@ -1,0 +1,59 @@
+package loginfidoform
+
+import (
+
+	"github.com/FerberJ/goauth/frontend/components/card"
+	"github.com/FerberJ/goauth/frontend/components/input"
+	"github.com/FerberJ/goauth/frontend/components/field"
+	"github.com/FerberJ/goauth/frontend/components/button"
+	"github.com/FerberJ/goauth/frontend/components/icon"
+)
+
+templ LoginForm() {
+	<div class="flex flex-col gap-6">
+		@card.Card() {
+			@card.Header() {
+				@card.Title() {
+					Login to your account
+				}
+				@card.Description() {
+					Enter your email below to login to your account
+				}
+			}
+			@card.Content() {
+				<form>
+					@field.Group() {
+						@field.Field() {
+							@field.Label(field.LabelProps{For: "email"}) {
+								Email
+							}
+							@input.Input(input.Props{
+								ID:          "email",
+								Type:        "email",
+								Placeholder: "m@example.com",
+								Required:    true,
+							})
+						}
+						@field.Field() {
+							@button.Button(button.Props{Type: button.TypeSubmit}) {
+								Login
+							}
+							@button.Button(button.Props{
+								Variant: button.VariantOutline, 
+								Type: button.TypeButton, 
+								Class: "w-full",
+								Href: "/auth/_/",
+								}) {
+								@icon.RectangleEllipsis()
+								Login with password
+							}
+							@field.Description(field.DescriptionProps{Class: "text-center"}) {
+								Don't have an account? <a href="/auth/_/signup">Sign up</a>
+							}
+						}
+					}
+				</form>
+			}
+		}
+	</div>
+}

@@ -9,22 +9,24 @@ import (
 	"strings"
 
 	"github.com/FerberJ/goauth/frontend/components"
-	"github.com/FerberJ/goauth/frontend/pages"
+	p "github.com/FerberJ/goauth/frontend/middleware/pattern"
+	loginpage "github.com/FerberJ/goauth/frontend/pages/login"
+	loginfidopage "github.com/FerberJ/goauth/frontend/pages/loginfido"
+	resetpwpage "github.com/FerberJ/goauth/frontend/pages/resetpw"
+	signuppage "github.com/FerberJ/goauth/frontend/pages/signup"
 	"github.com/FerberJ/goauth/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
-func Run(mw middleware.Middleware) *chi.Mux {
-	r := chi.NewRouter()
+func Run(mw middleware.Middleware, pattern string) chi.Router {
+	ro := chi.NewRouter()
 
-	setupAssetsRoutes(r)
-
-	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-		pages.Login().Render(r.Context(), w)
-	})
-	r.Get("/signup", func(w http.ResponseWriter, r *http.Request) {
-		pages.Signup().Render(r.Context(), w)
-	})
+	setupAssetsRoutes(ro)
+	r := ro.With(p.NewHandler(pattern).PatternMw)
+	loginpage.NewHandler(r, mw)
+	signuppage.NewHandler(r, mw)
+	resetpwpage.NewHandler(r, mw)
+	loginfidopage.NewHandler(r, mw)
 
 	return r
 }

@@ -7,22 +7,26 @@ import (
 	"github.com/FerberJ/goauth/api"
 	"github.com/FerberJ/goauth/auth"
 	"github.com/FerberJ/goauth/config"
+	"github.com/FerberJ/goauth/frontend/components/loginform"
+	signupform "github.com/FerberJ/goauth/frontend/components/signup"
 	"github.com/FerberJ/goauth/mail"
 	"github.com/FerberJ/goauth/middleware"
 	"github.com/FerberJ/goauth/store"
+	"github.com/a-h/templ"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type Goauth struct {
-	r   chi.Router
-	cfg config.Config
-	err error
-	mw  middleware.Middleware
+	cfg     config.Config
+	err     error
+	mw      middleware.Middleware
+	pattern string
 }
 
 func New(db *sql.DB) *Goauth {
 	a := new(Goauth)
+	a.pattern = "/auth"
 
 	cfg, err := config.GetConf(db)
 
@@ -39,8 +43,10 @@ func New(db *sql.DB) *Goauth {
 func (a *Goauth) Err() error {
 	return a.err
 }
-func (a *Goauth) Router() chi.Router {
-	return a.r
+
+func (a *Goauth) WithPattern(pattern string) *Goauth {
+	a.pattern = pattern
+	return a
 }
 
 func (a *Goauth) WithCustomResetPasswordMail(m func(cfgEndpoint string, token string) (message string, sunject string, err error)) *Goauth {
@@ -62,27 +68,32 @@ func (a *Goauth) Authorization(next http.Handler) http.Handler {
 	return a.mw.Authorization(next)
 }
 
-func (a *Goauth) SetupRoutes() *Goauth {
+func (a *Goauth) GetLoginForm() templ.Component {
+	return loginform.LoginForm()
+}
+
+func (a *Goauth) GetSignupForm() templ.Component {
+	return signupform.SignupForm()
+}
+
+func (a *Goauth) GetRoutes(r *chi.Mux) error {
 	st, err := store.Init(a.cfg.DB)
 	if err != nil {
-		a.err = err
-		return a
+		return err
 	}
 	mailClient, err := mail.Init(a.cfg.SMTP)
 	if err != nil {
-		a.err = err
-		return a
+		return err
 	}
 	wa, err := auth.Init()
 	if err != nil {
-		a.err = err
-		return a
+		return err
 	}
 	a.mw = middleware.NewMiddleware(st, a.cfg, mailClient, wa)
 
-	routes := api.GetRoutes(a.cfg, st, mailClient, wa)
+	routes := api.GetRoutes(a.cfg, st, mailClient, wa, a.pattern)
 
-	a.r = routes
+	r.Mount(a.pattern, routes)
 
-	return a
+	return nil
 }

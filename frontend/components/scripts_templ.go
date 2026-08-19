@@ -8,6 +8,8 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "github.com/FerberJ/goauth/frontend/middleware/pattern"
+
 // Scripts renders the one script tag that loads the component JS bundle.
 // Render it once in the layout <head>.
 func Scripts() templ.Component {
@@ -38,7 +40,7 @@ func Scripts() templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.GetNonce(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/components/scripts.templ`, Line: 6, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/components/scripts.templ`, Line: 8, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
@@ -49,9 +51,9 @@ func Scripts() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(scriptsSrc())
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(scriptsSrc(pattern.GetPattern(ctx)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/components/scripts.templ`, Line: 6, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/components/scripts.templ`, Line: 8, Col: 86}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 		if templ_7745c5c3_Err != nil {

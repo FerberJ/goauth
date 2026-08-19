@@ -87,9 +87,9 @@ func bundle() ([]byte, []byte, string) {
 // The content hash lives in the path like Next's static chunks
 // (/_next/static/chunks/<hash>.js): query strings are ignored by some CDN
 // caches, path hashes never are.
-func scriptsSrc() string {
+func scriptsSrc(pattern string) string {
 	_, _, hash := bundle()
-	return "/auth/_/components/shadcn-templ-" + hash + ".js"
+	return pattern + "/_/components/shadcn-templ-" + hash + ".js"
 } // "/auth/frontend/components/shadcn-templ-
 
 // ScriptsHandler serves the component JS bundle. Mount it on

@@ -1,20 +1,15 @@
-package pages
+package loginfidopage
 
 import (
-
-
-
 	"github.com/FerberJ/goauth/frontend/layouts"
-
-
-	"github.com/FerberJ/goauth/frontend/pages/signup"
+	"github.com/FerberJ/goauth/frontend/components/loginfidoform"
 )
 
-templ Signup() {
+templ Login() {
 	@layouts.Base("templ-app") {
 	<div class="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
 		<div class="w-full max-w-sm">
-			@signup.SignupForm()
+			@loginfidoform.LoginForm()
 		</div>
 	</div>
 		}

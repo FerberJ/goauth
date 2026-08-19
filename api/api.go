@@ -1,31 +1,24 @@
 package api
 
 import (
-	"net/http"
-	"os"
-
 	"github.com/FerberJ/goauth/config"
 	"github.com/FerberJ/goauth/frontend"
-	"github.com/FerberJ/goauth/frontend/assets"
 	"github.com/FerberJ/goauth/handler"
 	"github.com/FerberJ/goauth/mail"
 	"github.com/FerberJ/goauth/middleware"
 	"github.com/FerberJ/goauth/store"
-	"github.com/templui/templui/utils"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-webauthn/webauthn/webauthn"
 )
 
-func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webauthn.WebAuthn) chi.Router {
+func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webauthn.WebAuthn, pattern string) chi.Router {
 	r := chi.NewRouter()
-
-	setupAssetsRoutes(r)
 
 	mw := middleware.NewMiddleware(db, config, mc, wa)
 	h := handler.NewHandler(db, config, mc, wa)
 
-	f := frontend.Run(mw)
+	f := frontend.Run(mw, pattern)
 	r.Mount("/_/", f)
 
 	r.Post("/signup", h.HandleSignup)
@@ -69,29 +62,4 @@ func GetRoutes(config config.Config, db store.DB, mc mail.MailClient, wa *webaut
 	a.Get("/admin/users/{id}/image", h.HandleGetUserImage)
 
 	return r
-}
-
-func setupAssetsRoutes(mux *chi.Mux) {
-	isDevelopment := os.Getenv("GO_ENV") != "production"
-
-	assetHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if isDevelopment {
-			w.Header().Set("Cache-Control", "no-store")
-		} else {
-			w.Header().Set("Cache-Control", "public, max-age=31536000")
-		}
-
-		fs := http.FileServer(http.FS(assets.Assets))
-
-		fs.ServeHTTP(w, r)
-	})
-
-	mux.Handle("GET /assets/", http.StripPrefix("/assets/", assetHandler))
-
-	// templUI embedded component scripts need a real *http.ServeMux
-	scriptMux := http.NewServeMux()
-	utils.SetupScriptRoutes(scriptMux, isDevelopment)
-
-	// Mount that mux into chi. Any http.Handler satisfies Mount/Handle.
-	mux.Mount("/", scriptMux)
 }
