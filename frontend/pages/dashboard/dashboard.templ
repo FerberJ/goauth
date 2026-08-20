@@ -1,0 +1,20 @@
+package dashboardpage
+
+import (
+	"github.com/FerberJ/goauth/frontend/components/loginform"
+	"github.com/FerberJ/goauth/frontend/layouts"
+)
+
+templ Dashboard() {
+	@layouts.Base("Dashboard") {
+		<div id="root" hx-get="/auth/_/dashboard" hx-trigger="load" hx-swap="innerHTML"></div>
+	}
+}
+
+templ Login() {
+	<div class="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+		<div class="w-full max-w-sm" id="loginform">
+			@loginform.LoginForm()
+		</div>
+	</div>
+}

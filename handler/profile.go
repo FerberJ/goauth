@@ -183,7 +183,7 @@ func getTokens(ctx context.Context, userID string, h Handler) (token.Tokens, err
 		return t, err
 	}
 
-	_, err = re.Create(ctx, userID)
+	t.Refresh, err = re.Create(ctx, userID)
 	if err != nil {
 		return t, err
 	}

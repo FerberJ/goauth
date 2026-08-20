@@ -43,7 +43,6 @@ func main() {
 		fs.ServeHTTP(w, r)
 	})
 	r.Handle("/*", fs)
-
 	l := r.With(auth.Authorization)
 	l.Get("/stuff", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

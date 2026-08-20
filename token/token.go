@@ -28,14 +28,9 @@ func CreateTokens(userID, secretKey string) (Tokens, error) {
 		return tokens, fmt.Errorf("cannot create a jwt token: %w", err)
 	}
 
-	refresh, err := GetRefreshToken()
-	if err != nil {
-		return tokens, fmt.Errorf("cannot create a refresh token: %w", err)
-	}
-
 	tokens = Tokens{
 		JWT:     jwt,
-		Refresh: refresh,
+		Refresh: "",
 	}
 
 	return tokens, nil

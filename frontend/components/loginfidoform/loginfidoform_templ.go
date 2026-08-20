@@ -272,7 +272,11 @@ func LoginForm() templ.Component {
 							Variant: button.VariantOutline,
 							Type:    button.TypeButton,
 							Class:   "w-full",
-							Href:    "/auth/_/",
+							Attributes: templ.Attributes{
+								"hx-get":    "/auth/_/login",
+								"hx-target": "#loginform",
+								"hx-swap":   "innerHTML",
+							},
 						}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err

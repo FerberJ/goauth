@@ -39,7 +39,7 @@ func Base(title string) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/layouts/base.templ`, Line: 16, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/layouts/base.templ`, Line: 17, Col: 15}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -52,13 +52,13 @@ func Base(title string) templ.Component {
 		var templ_7745c5c3_Var3 templ.SafeURL
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(getStyleCss(pattern.GetPattern(ctx)))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/layouts/base.templ`, Line: 17, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `frontend/layouts/base.templ`, Line: 18, Col: 67}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js\" integrity=\"sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V\" crossorigin=\"anonymous\"></script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><script src=\"/auth/_/assets/htmx.min.js\"></script><!--\n\t\t\t<script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js\" integrity=\"sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V\" crossorigin=\"anonymous\"></script>\n\t\t\t-->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -74,7 +74,7 @@ func Base(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</body><script>\n\tdocument.body.addEventListener('htmx:responseError', function (evt) {\n\t\tif (evt.detail.xhr.status === 401) {\n\t\t\tevt.preventDefault(); // stop htmx from swapping the error response\n\n\t\t\tfetch('/auth/refresh', {\n\t\t\t\tmethod: 'POST',\n\t\t\t\tcredentials: 'include', // send refresh token cookie\n\t\t\t})\n\t\t\t\t.then(res => {\n\t\t\t\t\tif (!res.ok) throw new Error('refresh failed');\n\t\t\t\t})\n\t\t\t\t.then(() => {\n\t\t\t\t\t// retry the original request that got the 401\n\t\t\t\t\thtmx.ajax(evt.detail.requestConfig.verb,\n\t\t\t\t\t\tevt.detail.requestConfig.path,\n\t\t\t\t\t\tevt.detail.requestConfig.elt);\n\t\t\t\t})\n\t\t\t\t.catch(() => {\n\t\t\t\t\thtmx.ajax('Get', '/auth/_/login', evt.detail.requestConfig.elt)\n\t\t\t\t});\n\t\t}\n\t});\n\n</script></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

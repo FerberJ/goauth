@@ -8,22 +8,55 @@ import "github.com/FerberJ/goauth/frontend/middleware/pattern"
 
 
 templ Base(title string) {
-	<!DOCTYPE html>
-	<html lang="en">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>{ title }</title>
-			<link rel="stylesheet" href={ getStyleCss(pattern.GetPattern(ctx)) }/>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>{ title }</title>
+	<link rel="stylesheet" href={ getStyleCss(pattern.GetPattern(ctx)) } />
+
+	<script src="/auth/_/assets/htmx.min.js"></script>
+
+	<!--
 			<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" integrity="sha384-H5SrcfygHmAuTDZphMHqBJLc3FhssKjG7w/CeCpFReSfwBWDTKpkzPP8c+cLsK+V" crossorigin="anonymous"></script>
-			@components.Scripts()
-		</head>
-		<body>
-			{ children... }
-		</body>
-	</html>
+			-->
+	@components.Scripts()
+</head>
+
+<body>
+	{ children... }
+</body>
+<script>
+	document.body.addEventListener('htmx:responseError', function (evt) {
+		if (evt.detail.xhr.status === 401) {
+			evt.preventDefault(); // stop htmx from swapping the error response
+
+			fetch('/auth/refresh', {
+				method: 'POST',
+				credentials: 'include', // send refresh token cookie
+			})
+				.then(res => {
+					if (!res.ok) throw new Error('refresh failed');
+				})
+				.then(() => {
+					// retry the original request that got the 401
+					htmx.ajax(evt.detail.requestConfig.verb,
+						evt.detail.requestConfig.path,
+						evt.detail.requestConfig.elt);
+				})
+				.catch(() => {
+					htmx.ajax('Get', '/auth/_/login', evt.detail.requestConfig.elt)
+				});
+		}
+	});
+
+</script>
+
+</html>
 }
 
 func getStyleCss(pattern string) string {
-	return pattern + "/_/assets/css/styles.css"
+return pattern + "/_/assets/css/styles.css"
 }

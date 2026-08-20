@@ -1,15 +1,22 @@
 package loginform
 
 import (
-
-	"github.com/FerberJ/goauth/frontend/components/card"
-	"github.com/FerberJ/goauth/frontend/components/input"
-	"github.com/FerberJ/goauth/frontend/components/field"
 	"github.com/FerberJ/goauth/frontend/components/button"
+	"github.com/FerberJ/goauth/frontend/components/card"
+	"github.com/FerberJ/goauth/frontend/components/field"
 	"github.com/FerberJ/goauth/frontend/components/icon"
+	"github.com/FerberJ/goauth/frontend/components/input"
 )
 
 templ LoginForm() {
+	<div class="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+		<div class="w-full max-w-sm" id="loginform">
+			@loginForm()
+		</div>
+	</div>
+}
+
+templ loginForm() {
 	<div class="flex flex-col gap-6">
 		@card.Card() {
 			@card.Header() {
@@ -52,16 +59,18 @@ templ LoginForm() {
 							@button.Button(button.Props{Type: button.TypeSubmit}) {
 								Login
 							}
-
 							@button.Button(button.Props{
-								Variant: button.VariantOutline, 
-								Type: button.TypeButton,
-								Href: "/auth/_/fido",
-								}) {
+								Variant: button.VariantOutline,
+								Type:    button.TypeButton,
+								Attributes: templ.Attributes{
+									"hx-get":    "/auth/_/fido",
+									"hx-target": "#loginform",
+									"hx-swap":   "innerHTML",
+								},
+							}) {
 								@icon.KeyRound()
 								Login with security key
 							}
-
 							@field.Description(field.DescriptionProps{Class: "text-center"}) {
 								Don't have an account? <a href="/auth/_/signup">Sign up</a>
 							}

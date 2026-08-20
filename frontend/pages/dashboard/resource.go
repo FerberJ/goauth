@@ -1,4 +1,4 @@
-package loginpage
+package dashboardpage
 
 import (
 	"github.com/FerberJ/goauth/middleware"

@@ -42,7 +42,11 @@ templ LoginForm() {
 								Variant: button.VariantOutline, 
 								Type: button.TypeButton, 
 								Class: "w-full",
-								Href: "/auth/_/",
+								Attributes: templ.Attributes{
+									"hx-get":      "/auth/_/login",
+									"hx-target":   "#loginform",
+									"hx-swap":     "innerHTML",
+								},
 								}) {
 								@icon.RectangleEllipsis()
 								Login with password

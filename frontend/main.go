@@ -10,8 +10,7 @@ import (
 
 	"github.com/FerberJ/goauth/frontend/components"
 	p "github.com/FerberJ/goauth/frontend/middleware/pattern"
-	loginpage "github.com/FerberJ/goauth/frontend/pages/login"
-	loginfidopage "github.com/FerberJ/goauth/frontend/pages/loginfido"
+	dashboardpage "github.com/FerberJ/goauth/frontend/pages/dashboard"
 	resetpwpage "github.com/FerberJ/goauth/frontend/pages/resetpw"
 	signuppage "github.com/FerberJ/goauth/frontend/pages/signup"
 	"github.com/FerberJ/goauth/middleware"
@@ -23,10 +22,9 @@ func Run(mw middleware.Middleware, pattern string) chi.Router {
 
 	setupAssetsRoutes(ro)
 	r := ro.With(p.NewHandler(pattern).PatternMw)
-	loginpage.NewHandler(r, mw)
+	dashboardpage.NewHandler(r, mw)
 	signuppage.NewHandler(r, mw)
 	resetpwpage.NewHandler(r, mw)
-	loginfidopage.NewHandler(r, mw)
 
 	return r
 }
