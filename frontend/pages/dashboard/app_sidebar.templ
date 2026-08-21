@@ -1,0 +1,42 @@
+package dashboardpage
+
+import "github.com/FerberJ/goauth/frontend/components/sidebar"
+import "github.com/FerberJ/goauth/frontend/components/icon"
+
+
+
+// This is sample data.
+var data = struct {
+	User     User
+	NavMain  []NavMainItem
+}{
+	User: User{
+		Name:   "Axel Adrian",
+		Email:  "m@example.com",
+		Avatar: "https://github.com/axadrn.png",
+	},
+	NavMain: []NavMainItem{
+		{
+			Title: "Dashboard", URL: "#", Icon: icon.Users,
+		},
+	},
+}
+
+templ AppSidebar(props ...sidebar.Props) {
+	{{ var p sidebar.Props }}
+	if len(props) > 0 {
+		{{ p = props[0] }}
+	}
+	if p.Collapsible == "" {
+		{{ p.Collapsible = sidebar.CollapsibleIcon }}
+	}
+	@sidebar.Sidebar(p) {
+		@sidebar.Content() {
+			@NavMain(data.NavMain)
+		}
+		@sidebar.Footer() {
+			@NavUser(data.User)
+		}
+		@sidebar.Rail()
+	}
+}

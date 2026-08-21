@@ -1,0 +1,36 @@
+package dashboardpage
+
+import "github.com/FerberJ/goauth/frontend/components/sidebar"
+import "github.com/FerberJ/goauth/frontend/components/icon"
+
+
+
+type NavMainItem struct {
+	Title    string
+	URL      string
+	Icon     func(...icon.Props) templ.Component
+}
+
+
+templ NavMain(items []NavMainItem) {
+	@sidebar.Group() {
+		@sidebar.GroupLabel() {
+			GOAUTH
+		}
+		@sidebar.Menu() {
+			for _, item := range items {
+					@sidebar.MenuItem() {
+						@sidebar.MenuButton(sidebar.MenuButtonProps{
+							Tooltip:    item.Title,
+						}) {
+							if item.Icon != nil {
+								@item.Icon()
+							}
+							<span>{ item.Title }</span>
+						}
+					}
+				
+			}
+		}
+	}
+}

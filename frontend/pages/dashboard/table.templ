@@ -1,0 +1,88 @@
+package dashboardpage
+
+import "github.com/FerberJ/goauth/frontend/components/table"
+import "github.com/FerberJ/goauth/frontend/components/dropdownmenu"
+import "github.com/FerberJ/goauth/frontend/components/button"
+import "github.com/FerberJ/goauth/frontend/components/icon"
+import "github.com/FerberJ/goauth/frontend/components/avatar"
+
+
+ 
+
+ 
+type tableActionProduct struct {
+	Name  string
+	Price string
+}
+ 
+var tableActionProducts = []tableActionProduct{
+	{"Wireless Mouse", "$29.99"},
+	{"Mechanical Keyboard", "$129.99"},
+	{"USB-C Hub", "$49.99"},
+}
+ 
+templ TableActions() {
+	@table.Table(table.Props{
+
+    }) {
+		@table.Header() {
+			@table.Row() {
+				@table.Head() {}
+				@table.Head() {
+					Username
+				}
+				@table.Head() {
+					Email
+				}
+				@table.Head(table.HeadProps{Class: "text-right"}) {
+					Actions
+				}
+			}
+		}
+		@table.Body() {
+			for _, product := range tableActionProducts {
+				@table.Row() {
+					@table.Cell(table.CellProps{Class: "font-medium"}) {
+											@avatar.Avatar() {
+						@avatar.Image(avatar.ImageProps{Src: "https://github.com/axadrn.png", Alt: product.Price})
+						@avatar.Fallback() {
+							AA
+						}
+					}
+					}
+					@table.Cell() {
+						Axel Adrian
+					}
+					@table.Cell() {
+						email
+					}
+					@table.Cell(table.CellProps{Class: "text-right"}) {
+						@dropdownmenu.DropdownMenu() {
+							@button.Button(button.Props{
+								Variant:    button.VariantGhost,
+								Size:       button.SizeIcon,
+								Class:      "size-8",
+								Attributes: dropdownmenu.Trigger(ctx),
+							}) {
+								@icon.Ellipsis()
+								<span class="sr-only">Open menu</span>
+							}
+							@dropdownmenu.Content(dropdownmenu.ContentProps{Align: dropdownmenu.AlignEnd}) {
+								@dropdownmenu.Item() {
+									Edit
+								}
+								@dropdownmenu.Item() {
+									Duplicate
+								}
+								@dropdownmenu.Separator()
+								@dropdownmenu.Item(dropdownmenu.ItemProps{Variant: dropdownmenu.ItemVariantDestructive}) {
+									Delete
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

@@ -3,18 +3,17 @@ package dashboardpage
 import (
 	"net/http"
 
-	"github.com/FerberJ/goauth/frontend/components/button"
 	"github.com/FerberJ/goauth/frontend/components/loginfidoform"
 	"github.com/FerberJ/goauth/frontend/components/loginform"
 )
 
 func (h *Handler) addRoutes() {
-	r := h.r.With(h.mw.Authorization)
+	r := h.r.With(h.mw.Authorization).With(h.mw.Admin)
 	h.r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		Dashboard().Render(r.Context(), w)
 	})
 	r.Get("/dashboard", func(w http.ResponseWriter, r *http.Request) {
-		component := button.Button()
+		component := Dashboard123()
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := component.Render(r.Context(), w); err != nil {

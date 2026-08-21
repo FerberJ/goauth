@@ -107,16 +107,16 @@ func GetConf(db *sql.DB) (Config, error) {
 		},
 		Password: Password{
 			TokenBytes: pwTokenBytes,
-			TokenTTL:   time.Duration(pwTokenTTL),
+			TokenTTL:   time.Duration(pwTokenTTL) * time.Second,
 			Endpoint:   pwEndpoint,
 		},
 		Verification: Verification{
 			TokenBytes: tokenBytes,
-			TokenTTL:   time.Duration(tokenTTL),
+			TokenTTL:   time.Duration(tokenTTL) * time.Second,
 			Endpoint:   endpoint,
 		},
 		Refresh: Refresh{
-			TokenTTL: time.Duration(tokenTTLRefresh),
+			TokenTTL: time.Duration(tokenTTLRefresh) * time.Second,
 		},
 	}
 

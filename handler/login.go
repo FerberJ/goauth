@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/FerberJ/goauth/encryption"
 	errormsg "github.com/FerberJ/goauth/error_msg"
@@ -52,14 +53,16 @@ func (h Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int((24 * time.Hour).Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh",
 		Value:    t.Refresh,
-		Path:     "/",
+		Path:     "/auth/refresh",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(h.config.Refresh.TokenTTL),
 	})
 
 	w.WriteHeader(http.StatusNoContent)
@@ -123,14 +126,16 @@ func (h Handler) HandleFinishLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int((24 * time.Hour).Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh",
 		Value:    t.Refresh,
-		Path:     "/",
+		Path:     "/auth/refresh",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(h.config.Refresh.TokenTTL.Seconds()),
 	})
 
 	w.WriteHeader(http.StatusNoContent)

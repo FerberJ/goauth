@@ -46,7 +46,7 @@ func (h Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh",
 		Value:    "",
-		Path:     "/",
+		Path:     "/auth/refresh",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,

@@ -52,7 +52,7 @@ func (v *Refresh) Create(ctx context.Context, userID string) (string, error) {
 		TokenID:   tokenHash,
 		UserID:    userID,
 		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().Add(v.config.Verification.TokenTTL).Unix(),
+		ExpiresAt: time.Now().Add(v.config.Refresh.TokenTTL).Unix(),
 	}
 	_, err = v.db.Queries.CreateRefresh(ctx, newR)
 	if err != nil {

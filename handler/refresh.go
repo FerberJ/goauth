@@ -55,14 +55,16 @@ func (h Handler) HandleRefresh(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int((24 * time.Hour).Seconds()),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh",
 		Value:    t.Refresh,
-		Path:     "/",
+		Path:     "/auth/refresh",
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(h.config.Refresh.TokenTTL.Seconds()),
 	})
 
 	w.WriteHeader(http.StatusOK)

@@ -1,8 +1,9 @@
 package dashboardpage
 
 import (
-	"github.com/FerberJ/goauth/frontend/components/loginform"
 	"github.com/FerberJ/goauth/frontend/layouts"
+	"github.com/FerberJ/goauth/frontend/components/sidebar"
+	"github.com/FerberJ/goauth/frontend/components/separator"
 )
 
 templ Dashboard() {
@@ -11,10 +12,42 @@ templ Dashboard() {
 	}
 }
 
-templ Login() {
-	<div class="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-		<div class="w-full max-w-sm" id="loginform">
-			@loginform.LoginForm()
-		</div>
-	</div>
+templ Dashboard123() {
+	@sidebar.Provider() {
+		@AppSidebar()
+		@sidebar.Inset() {
+			<header class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+				<div class="flex items-center gap-2 px-4">
+					@sidebar.Trigger(sidebar.TriggerProps{Class: "-ml-1"})
+					@separator.Separator(separator.Props{
+						Orientation: separator.OrientationVertical,
+						Class:       "mr-2 data-vertical:h-4 data-vertical:self-auto",
+					})
+				</div>
+			</header>
+			<div class="flex flex-1 flex-col gap-4 p-4 pt-0">
+				<div class="min-h-[100vh] flex-1 rounded-xl md:min-h-min">@TableActions()</div>
+			</div>
+		}
+	}
+	<script nonce={ templ.GetNonce(ctx) }>
+		(() => {
+			// Keep the selected team details in sync.
+			document.addEventListener("click", (e) => {
+				if (!(e.target instanceof Element)) return;
+				const item = e.target.closest("#sidebar07-team-menu [data-sidebar07-team-index]");
+				if (!item) return;
+				const i = item.getAttribute("data-sidebar07-team-index");
+				const name = item.textContent.trim().replace(/⌘\d$/, "").trim();
+				const plan = ["Enterprise", "Startup", "Free"][parseInt(i, 10)];
+				document.querySelectorAll("[data-sidebar07-team-logo]").forEach((logo) => {
+					logo.classList.toggle("hidden", logo.getAttribute("data-sidebar07-team-logo") !== i);
+				});
+				const nameEl = document.querySelector("[data-sidebar07-team-name]");
+				const planEl = document.querySelector("[data-sidebar07-team-plan]");
+				if (nameEl) nameEl.textContent = name;
+				if (planEl) planEl.textContent = plan;
+			});
+		})();
+	</script>	
 }
